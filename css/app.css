@@ -1,0 +1,43 @@
+@import url('window_play.css');
+@import url('window_settings.css');
+
+html, body {
+  margin: 0;
+}
+body {
+  font-size: 1rem;
+
+}
+
+h1 {
+  margin: 0 0 1rem 0;
+}
+
+p {
+  font-size: inherit;
+}
+/* override top-drawer background color */
+section[role="region"] > header:first-child {
+  background-color: #008E8A;
+}
+.hiddenwindow {
+  display: none;
+}
+#drawer {
+  background-color: black
+}
+
+#drawer > header > h1 {
+  text-transform: capitalize;
+}
+
+
+/* override drawer style and stuff
+ * this allows scrolling below drawer, while
+ * the header stayes fixed:
+
+$("#drawer").style.overflowY = "scroll"; $("#drawer > header").style.position = "fixed";   $("#drawer > header").style.width = "100%";  $("#main").style.paddingTop = "5rem"
+ */
+#drawer { overflow-y: scroll; }
+#drawer > header { position: fixed; width: 100%; }
+#main { padding-top: 5rem; }

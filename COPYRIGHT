@@ -1,0 +1,13 @@
+Copyright and License for this application and its libraries:
+
+* Firefox OS building blocks (in buildingblocks/) Copyright 2012,
+    Mozilla Foundation. See buildingblocks/LICENSE
+* AngularJS (in js/libs/) under the MIT license. See
+    https://github.com/angular/angular.js/blob/master/LICENSE
+* app logo and "missing cover" image self-created with the help of
+    FontAwesome (see logo-recreated.html). License: SIL OFL 1.1,
+    see: http://scripts.sil.org/OFL
+* logitech, squeezebox are (c)(tm)(etc) by logitech company.  
+* Application code (html files and files in js/ are under the GNU
+    Affero General Public License and copyright by myself,
+    Frederik Braun.

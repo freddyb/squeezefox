@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html ng-app="squeezefox" ng-csp>
+<head>
+        <meta charset="utf-8">
+        <link href="http://maxcdn.bootstrapcdn.com/font-awesome/4.1.0/css/font-awesome.min.css" rel="stylesheet" type="text/css">
+        <style>
+            i {
+            
+                color:white;
+
+                font-size: 50px;
+            }
+            div.logobox {
+                display: block;
+                overflow: hidden;
+                width: 4em;
+                height: 4rem;
+                border-radius: 2rem;
+                padding-top: 0.3rem;
+                padding-right: 0.3rem;
+                box-sizing: border-box;
+                box-shadow: 0 0 0 0.1rem black;
+                background:  #008E8A center center / cover;                
+                text-align:center;
+                vertical-align: center;
+            }
+                
+            div.logobackground {
+                margin-top: 0.5rem;
+                text-align: center;
+                vertical-align:center;
+                width: 4.5em;
+                height: 4.5rem;
+                border-radius: 2.25rem;
+                box-sizing: border-box;
+                box-shadow: 0 0 0 0.1rem lightgrey;
+                background-color:grey;
+                padding: 0.25rem;                
+            }
+                    
+            div.box {
+                                margin-top: 15px;
+                height: 50px;
+                width: 50px;
+                border: 2px solid black;
+               background-color: #008E8A;
+                padding: 2px; 
+
+                border-radius: 10px; /* future proofing */
+            }
+            div.background {
+                text-align:center;
+                padding 5px;
+                height: 65px;
+                width: 65px;
+                background-color:white;
+                border-radius: 10px; /* future proofing */
+            }
+            
+        
+        </style>
+        </head><body>
+
+
+<h1>app logo</h1>
+<div class="logobackground">
+    <div class="logobox">
+        <span>
+            <i class="fa fa-music"></i>
+        </span>
+    </div>
+</div>
+
+<h1>missing cover image</h1>
+<div class="background">
+    <div class="box">
+        <span>
+<i class="fa fa-play-circle-o"></i>
+
+        </span>
+    </div>
+</div>
+
+
+</body></html>

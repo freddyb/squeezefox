@@ -1,0 +1,17 @@
+#window-settings > form > fieldset > section > a[role="button"] {
+  width: 40%; float:right;
+}
+
+#window-settings > form > fieldset > p {
+  font-size: 10pt;
+  color: grey;
+}
+
+/* text for fieldset legend is white now. */
+fieldset legend,
+input[type="date"],
+input[type="time"],
+input[type="datetime"],
+input[type="datetime-local"] {
+  color: white;
+}
