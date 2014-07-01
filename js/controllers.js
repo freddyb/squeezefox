@@ -6,12 +6,12 @@ squeezefox.controller('WindowCtrl', ['$scope', '$cookieStore', function ($scope,
                                 //{playerid: "00:04:20:2b:39:ec", name: ''}; //XXX make dynamic
     $scope.current_window = "play";
     $scope.hidden = false;
-
     $scope.server = { addr: $cookieStore.get('server.addr') || '', port: $cookieStore.get('server.port') || '' }
     $scope.playlist = {current: 0, list: []};
     $scope.active = false;
     $scope.power = 0;
     $scope.playing = false;
+    $scope.shuffle = 0;
     
     $scope.JSONRPC = function JSONRPC(payload, callback) {
         var xhr = new XMLHttpRequest({mozSystem: true});
@@ -46,7 +46,10 @@ squeezefox.controller('WindowCtrl', ['$scope', '$cookieStore', function ($scope,
         $scope.JSONRPC({"id":1,"method":"slim.request","params":[$scope.selectedPlayer.playerid, ["button","jump_fwd"]]});
         //$scope.getStatus();
     };
-    $scope.shuffle;
+    $scope.toggleShuffle = function toggleShuffle() {
+        // 0 = disabled, 1 = per song, 2 = per album (unused)
+        $scope.JSONRPC({"id":1,"method":"slim.request","params": [$scope.selectedPlayer.playerid, ["playlist","shuffle", $scope.shuffle == "0" ? "1" : "0"]]});
+    }
 
 
     $scope.powerToggle = function powerToggle() {
@@ -84,8 +87,6 @@ squeezefox.controller('WindowCtrl', ['$scope', '$cookieStore', function ($scope,
         return $scope.playing ? 'media-pause' : 'media-play';
     };
     $scope.CSS_Shuffle = function() {
-        //XXX this doesnt work properly, as squeezebox has 3 states.
-        //    we could hide them from the user
         return $scope.shuffle ? 'media-shuffleon' : 'media-shuffleoff';
     };    
 
@@ -110,7 +111,6 @@ squeezefox.controller('WindowCtrl', ['$scope', '$cookieStore', function ($scope,
 squeezefox.controller('PlayerStatusCtrl', ['$scope', '$http', '$interval', function ($scope, $http, $interval) {
     // defaults
     var lastUpdate = 0;
-    $scope.shuffle = 0;
     $scope.playerTitle = "";
     $scope.currentArtist = "";
     $scope.currentTitle = "";
@@ -133,7 +133,7 @@ squeezefox.controller('PlayerStatusCtrl', ['$scope', '$http', '$interval', funct
             $scope.$parent.playing = (xhr.response.result.mode == "play");
             $scope.$parent.active = true;
             $scope.$parent.power = xhr.response.result.power;
-            $scope.shuffle = xhr.response.result['playlist shuffle'];
+            $scope.$parent.shuffle = xhr.response.result['playlist shuffle'];
             $scope.repeat = xhr.response.result['playlist repeat'];
             $scope.$parent.playlist.list = xhr.response.result.playlist_loop;
             $scope.$parent.playlist.current = xhr.response.result.playlist_cur_index;
