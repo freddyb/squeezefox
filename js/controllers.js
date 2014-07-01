@@ -26,16 +26,15 @@ squeezefox.controller('WindowCtrl', ['$scope', '$cookieStore', function ($scope,
             $scope.active = true;
             if (callback) { callback(this); }
         };
-        
     };
     
     $scope.play = function play() { // toggle
-        $scope.JSONRPC({"id":1,"method":"slim.request","params":[$scope.selectedPlayer.playerid, ["button","play"]]});
+        $scope.JSONRPC({"id":1,"method":"slim.request","params":[$scope.selectedPlayer.playerid, ["play", ""]]});
         //$scope.getStatus();
     };
 
     $scope.playPause = function playPause() { // toggle
-        $scope.JSONRPC({"id":1,"method":"slim.request","params":[$scope.selectedPlayer.playerid, ["button", "pause", $scope.playing ? "1" : "0"]]});
+        $scope.JSONRPC({"id":1,"method":"slim.request","params":[$scope.selectedPlayer.playerid, ["pause", $scope.playing ? "1" : "0", "", ""]]});
         //$scope.getStatus();
     };
     $scope.backward = function backward() {
