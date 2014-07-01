@@ -4,13 +4,15 @@
   padding: 2px;
 }
 #coverimage > img {
-    max-width:100%;
+    max-width: 95%;
+    box-shadow: 0 0 10px #777;
 }
 #playerStatus {
-  font-size: 10pt;
+  font-size: 12pt;
   color:white;
   background-color:black;
 }
+#playerStatus > div:not(#coverimage) { margin: 5px; }
 #playingTitle {
   font-weight: bold;
 }
@@ -32,7 +34,7 @@
   transition: all 1.0s linear;
 }
 .performtransition {
-  transform: rotateY(180deg);
+  transform: rotateY(-180deg);
 }
 .face {
   position: absolute;
@@ -40,7 +42,7 @@
   height: 100%;
   backface-visibility: hidden;
   background-color: black;
-    color:white;
+  color:white;
 }
 .face.back {
   /*display: block;*/
