@@ -276,9 +276,8 @@ squeezefox.controller('SettingsCtrl', ['$scope', '$cookieStore', function ($scop
     }
 }]);
 
-
+/*
 angular.element(document).ready(function() {
-    
     document.addEventListener("visibilitychange", function() {
         // used to limit getStatus XHR
         angular.element(document.body).scope().hidden = document.hidden;
@@ -287,3 +286,4 @@ angular.element(document).ready(function() {
     // fire a first getStatus asap:
     angular.element(document.querySelector("#window-play")).scope().getStatus
 });
+*/
