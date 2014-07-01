@@ -1,2 +1,3 @@
-* block viewport to portrait
+* UI is not very responsive with pause/play/shuffle/next, etc.
+** it sometimes races with pending getStatus() calls that still have oldvalue.
 * address all XXX/TODO notes or place them in here.

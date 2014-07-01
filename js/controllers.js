@@ -34,7 +34,9 @@ squeezefox.controller('WindowCtrl', ['$scope', '$cookieStore', function ($scope,
     };
 
     $scope.playPause = function playPause() { // toggle
-        $scope.JSONRPC({"id":1,"method":"slim.request","params":[$scope.selectedPlayer.playerid, ["pause", $scope.playing ? "1" : "0", "", ""]]});
+        var newplaying = $scope.playing ? "1" : "0";
+        $scope.playing = newplaying;
+        $scope.JSONRPC({"id":1,"method":"slim.request","params":[$scope.selectedPlayer.playerid, ["pause", newplaying, "", ""]]});
         //$scope.getStatus();
     };
     $scope.backward = function backward() {
@@ -47,12 +49,16 @@ squeezefox.controller('WindowCtrl', ['$scope', '$cookieStore', function ($scope,
     };
     $scope.toggleShuffle = function toggleShuffle() {
         // 0 = disabled, 1 = per song, 2 = per album (unused)
-        $scope.JSONRPC({"id":1,"method":"slim.request","params": [$scope.selectedPlayer.playerid, ["playlist","shuffle", $scope.shuffle == "0" ? "1" : "0"]]});
+        var newshuffle = $scope.shuffle == "0" ? "1" : "0";
+        $scope.shuffle = newshuffle;
+        $scope.JSONRPC({"id":1,"method":"slim.request","params": [$scope.selectedPlayer.playerid, ["playlist","shuffle", newshuffle]]});
     }
 
 
     $scope.powerToggle = function powerToggle() {
-        $scope.JSONRPC({"id":1,"method":"slim.request","params":[$scope.selectedPlayer.playerid, ["power", $scope.power ? "0" : "1" ]]});
+        var newpower = $scope.power ? "0" : "1";
+        $scope.power = newpower;
+        $scope.JSONRPC({"id":1,"method":"slim.request","params":[$scope.selectedPlayer.playerid, ["power", newpower]]});
         //$scope.getStatus();
     };
     $scope.powerOn = function powerOn() {
@@ -166,7 +172,7 @@ squeezefox.controller('PlayerStatusCtrl', ['$scope', '$http', '$interval', funct
 
     // 
     $scope.playItem = function playItem(index) {
-
+        //XXX update playlists and display?
         $scope.JSONRPC({"id":1,"method":"slim.request","params": [$scope.selectedPlayer.playerid, ["playlist","index",index,""]]});
             
     }
