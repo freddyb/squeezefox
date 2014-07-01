@@ -137,9 +137,14 @@ squeezefox.controller('PlayerStatusCtrl', ['$scope', '$http', '$interval', funct
             $scope.repeat = xhr.response.result['playlist repeat'];
             $scope.$parent.playlist.list = xhr.response.result.playlist_loop;
             $scope.$parent.playlist.current = xhr.response.result.playlist_cur_index;
-            var currentlyPlaying = $scope.$parent.playlist.list[$scope.$parent.playlist.current]
-            $scope.currentArtist = currentlyPlaying.artist;
-            $scope.currentTitle = currentlyPlaying.title;
+            var currentlyPlaying;
+            for (var entry of $scope.$parent.playlist.list) {
+                if (entry['playlist index'] == $scope.$parent.playlist.current) {
+                    var currentlyPlaying = entry;
+                    $scope.currentArtist = currentlyPlaying.artist;
+                    $scope.currentTitle = currentlyPlaying.title;
+                }
+            }
             if ('remoteMeta' in xhr.response.result) {
                 var rm = xhr.response.result.remoteMeta; //$scope.playlist.list[$scope.playlist.current];
                 $scope.artworkURL = rm.artwork_url || "img/icons/icon128x128.png";
