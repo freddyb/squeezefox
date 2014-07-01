@@ -10,7 +10,8 @@ squeezefox.controller('WindowCtrl', ['$scope', '$cookieStore', function ($scope,
     $scope.server = { addr: $cookieStore.get('server.addr') || '', port: $cookieStore.get('server.port') || '' }
     $scope.playlist = {current: 0, list: []};
     $scope.active = false;
-    $scope.power = 0;    
+    $scope.power = 0;
+    $scope.playing = false;
     
     $scope.JSONRPC = function JSONRPC(payload, callback) {
         var xhr = new XMLHttpRequest({mozSystem: true});
@@ -109,7 +110,6 @@ squeezefox.controller('WindowCtrl', ['$scope', '$cookieStore', function ($scope,
 squeezefox.controller('PlayerStatusCtrl', ['$scope', '$http', '$interval', function ($scope, $http, $interval) {
     // defaults
     var lastUpdate = 0;
-    $scope.playing = false;
     $scope.shuffle = 0;
     $scope.playerTitle = "";
     $scope.currentArtist = "";
@@ -130,7 +130,7 @@ squeezefox.controller('PlayerStatusCtrl', ['$scope', '$http', '$interval', funct
         $scope.JSONRPC({"id":1,"method":"slim.request","params":[$scope.selectedPlayer.playerid, ["status","-", 50, "tags:gABbehldiqtyrSuoKLNJ"]]}, function(xhr) {
             //xhr.response.result.mode (play, stop, pause)
             $scope.playerTitle = xhr.response.result.current_title;
-            $scope.playing = (xhr.response.result.mode == "play");
+            $scope.$parent.playing = (xhr.response.result.mode == "play");
             $scope.$parent.active = true;
             $scope.$parent.power = xhr.response.result.power;
             $scope.shuffle = xhr.response.result['playlist shuffle'];
