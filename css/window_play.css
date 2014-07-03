@@ -12,11 +12,20 @@
   color:white;
   background-color:black;
 }
-#playerStatus > div:not(#coverimage) { margin: 5px; }
+#playerStatus { margin: 5px; }
 #playingTitle {
   font-weight: bold;
 }
 
+#coverimage {
+  margin: 5px;
+  text-align: center; margin-top: 15px;
+  padding: 2px;
+}
+#coverimage > img {
+    max-width: 95%;
+    box-shadow: 0 0 10px #777;
+}
 
 #flip_container {
   position: relative;
