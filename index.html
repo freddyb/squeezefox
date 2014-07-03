@@ -47,6 +47,8 @@
     <a href="#content"><span class="icon icon-menu">hide sidebar</span></a>
     <a href="#drawer"><span class="icon icon-menu">show sidebar</span></a>
     <menu type="toolbar">
+      <button ng-click="volumeDown()"><i class="fa fa-volume-down"></i></button><!-- XXX visual feedback when clicking vol buttons?! -->
+      <button ng-click="volumeUp()"><i class="fa fa-volume-up"></i></button>
       <button ng-click="powerToggle()"><i class="fa fa-power-off"></i></button>
     </menu>
     <h1>{{ windowTitle(current_window) }}</h1>

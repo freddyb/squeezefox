@@ -65,6 +65,13 @@ squeezefox.controller('WindowCtrl', ['$scope', '$cookieStore', function ($scope,
         $scope.JSONRPC({"id":1,"method":"slim.request","params":[$scope.selectedPlayer.playerid, ["power","1"]]});
         //$scope.getStatus();
     };
+    $scope.volumeUp = function volup() {
+        $scope.JSONRPC({"id":1,"method":"slim.request","params":[$scope.selectedPlayer.playerid, ["mixer","volume", "+2.5"]]});
+    }
+    $scope.volumeDown = function voldown() {
+        $scope.JSONRPC({"id":1,"method":"slim.request","params":[$scope.selectedPlayer.playerid, ["mixer","volume", "-2.5"]]});
+    }
+
     
     $scope.changeWindow = function changeWindow(name) {
         if (['play', 'music', 'favorites', 'settings'].indexOf(name) !== -1) {
@@ -76,9 +83,12 @@ squeezefox.controller('WindowCtrl', ['$scope', '$cookieStore', function ($scope,
             return s.substr(0,1).toUpperCase() + s.substr(1);
         }
         switch (t) {
-            case "play":
-                return "Now playing"
-            break;
+            //case "play":
+            //    return "Now playing"
+            //break;
+            case 'favorites':
+                return 'Favs'; // ★
+                break;
             default:
                 return capitalize(t);
         }
