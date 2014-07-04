@@ -1,13 +1,19 @@
 "use strict";
 var squeezefox = angular.module('Squeezefox', ['ngCookies']);
 // ['ngRoute', 'phonecatControllers','phonecatFilters', 'phonecatServices'])
-squeezefox.controller('WindowCtrl', ['$scope', '$cookieStore', function ($scope, $cookieStore) {
-    $scope.selectedPlayer = {playerid: $cookieStore.get("selectedPlayer.playerid") || "",
-                             name: $cookieStore.get("selectedPlayer.name") || ""}
+squeezefox.controller('WindowCtrl', ['$scope', function ($scope) {
+    $scope.selectedPlayer = {playerid: "",
+                             name: ""};
+    localforage.getItem('selectedPlayer', function(cachedSelectedPlayer) {
+        $scope.selectedPlayer = cachedSelectedPlayer || {playerid: "", name: ""};
+    })
                                 //{playerid: "00:04:20:2b:39:ec", name: ''}; //XXX make dynamic
     $scope.current_window = "play";
     $scope.hidden = false;
-    $scope.server = { addr: $cookieStore.get('server.addr') || '', port: $cookieStore.get('server.port') || '' }
+    $scope.server = { addr: '', port: '' }
+    localforage.getItem('server', function (cachedServer) {
+        $scope.server = cachedServer || ({ addr: '', port: '' });
+    });
     $scope.playlist = {current: 0, list: []};
     $scope.active = false;
     $scope.power = 0;
@@ -20,10 +26,8 @@ squeezefox.controller('WindowCtrl', ['$scope', '$cookieStore', function ($scope,
         xhr.responseType = "json";
         xhr.send(JSON.stringify(payload));
         xhr.onload = function() {
-            $cookieStore.put("server.addr", $scope.server.addr);
-            $cookieStore.put("server.port", $scope.server.port);
-            $cookieStore.put("selectedPlayer.playerid", $scope.selectedPlayer.playerid);
-            $cookieStore.put("selectedPlayer.name", $scope.selectedPlayer.name);
+            localforage.setItem("server", $scope.server);
+            localforage.setItem("selectedPlayer", $scope.selectedPlayer);
             $scope.active = true;
             if (callback) { callback(this); }
         };
@@ -244,12 +248,16 @@ squeezefox.controller('MusicSearchCtrl', ['$scope', function ($scope) {
 }]);
 squeezefox.controller('FavoritesCtrl', ['$scope', function ($scope) {
     $scope.favorites = []
+    localforage.getItem("favorites", function (cachedFavorites) {
+        $scope.favorites = cachedFavorites || [];
+    });
     var triedfavorites = false;
     if (triedfavorites == false) {
         if ($scope.selectedPlayer.playerid !== "") {
             triedfavorites = true;
             $scope.JSONRPC({"id":1,"method":"slim.request","params": [$scope.selectedPlayer.playerid, ["favorites","items","","9999"]]}, function(xhr) {
                 $scope.favorites = xhr.response.result.loop_loop;
+                localforage.setItem("favorites", xhr.response.result.loop_loop);
             });
         }
     }
@@ -267,8 +275,11 @@ squeezefox.controller('FavoritesCtrl', ['$scope', function ($scope) {
     }
 }]);
 
-squeezefox.controller('SettingsCtrl', ['$scope', '$cookieStore', function ($scope, $cookieStore) {
-    $scope.players = $cookieStore.get("players") || [];
+squeezefox.controller('SettingsCtrl', ['$scope', function ($scope) {
+    $scope.players = [];
+    localforage.getItem("players", function (cachedPlayers) {
+        $scope.players = cachedPlayers || [];
+    });
     /*     {
             "model" : "baby",
             "connected" : 1,
@@ -289,7 +300,7 @@ squeezefox.controller('SettingsCtrl', ['$scope', '$cookieStore', function ($scop
         $scope.JSONRPC({"id":1,"method":"slim.request","params":["",["serverstatus",0,999]]}, function(xhr) {
             $scope.$parent.active = true; // errback and feedback.            
             $scope.players = xhr.response.result.players_loop;
-            $cookieStore.put("players", xhr.response.result.players_loop);
+            localforage.setItem("players", xhr.response.result.players_loop);
         });
     }
 }]);
