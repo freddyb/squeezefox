@@ -47,8 +47,6 @@
     <a href="#content"><span class="icon icon-menu">hide sidebar</span></a>
     <a href="#drawer"><span class="icon icon-menu">show sidebar</span></a>
     <menu type="toolbar">
-      <button ng-click="volumeDown()"><i class="fa fa-volume-down"></i></button><!-- XXX visual feedback when clicking vol buttons?! -->
-      <button ng-click="volumeUp()"><i class="fa fa-volume-up"></i></button>
       <button ng-click="powerToggle()"><i class="fa fa-power-off"></i></button>
     </menu>
     <h1>{{ windowTitle(current_window) }}</h1>
@@ -58,10 +56,14 @@
     <div id="window-play" ng-class="CSS_window('play')"  ng-controller="PlayerStatusCtrl"><!-- playing + cover + toolbar -->
       <div id="flip_container">
       <div id="flip_card" class="shadow" ng-class="CSS_transition()">
+        <div id="volbar">
+          <a ng-click="volumeUp()"><i class="fa fa-volume-up"></i></a>
+          <a ng-click="volumeDown()"><i class="fa fa-volume-down"></i></a><!-- XXX visual feedback when clicking vol buttons?! -->
+            </div>
         <div id="playerStatus" class="front face">
           <div id="playingInfo">
-            <div id="playingArtist">{{ currentArtist }}</div>            
-            <div id="playingTitle">{{ currentTitle }} <em ng-hide="playing">(Paused)</em></div>    
+            <div id="playingArtist">{{ currentArtist }}</div>
+            <div id="playingTitle">{{ currentTitle }} <em ng-hide="playing">(Paused)</em></div>
           </div>
           <div id="coverimage">
               <img ng-src="{{ artworkURL }}">
@@ -180,7 +182,7 @@
               <fieldset>
                 <legend class="action">Player</legend>
                 <p ng-hide="players">You must select a server before you can pick a player.</p>
-                <p ng-hide="$parent.selectedPlayer.name">Now please select a player:</p>
+                <p ng-hide="$parent.selectedPlayer.name && players">Now please select a player:</p>
                 <section ng-show="players">            
                   <select ng-model="$parent.selectedPlayer" ng-options="player.name for player in players">
                   </select>

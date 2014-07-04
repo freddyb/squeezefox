@@ -1,3 +1,4 @@
+"use strict";
 var squeezefox = angular.module('Squeezefox', ['ngCookies']);
 // ['ngRoute', 'phonecatControllers','phonecatFilters', 'phonecatServices'])
 squeezefox.controller('WindowCtrl', ['$scope', '$cookieStore', function ($scope, $cookieStore) {
@@ -83,12 +84,9 @@ squeezefox.controller('WindowCtrl', ['$scope', '$cookieStore', function ($scope,
             return s.substr(0,1).toUpperCase() + s.substr(1);
         }
         switch (t) {
-            //case "play":
-            //    return "Now playing"
-            //break;
-            case 'favorites':
-                return 'Favs'; // ★
-                break;
+            case "play":
+                return "Now playing"
+            break;
             default:
                 return capitalize(t);
         }

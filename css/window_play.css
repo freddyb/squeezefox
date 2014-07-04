@@ -61,3 +61,15 @@
   color: white;
   background-color: black;
 }
+#volbar {
+  color: white;
+  font-size: 3em;
+  position: absolute;
+  width: 100%;
+  opacity: 1;
+  z-index: 2;
+}
+#volbar > a {
+  float:right;
+  margin: 5px;
+}
