@@ -1,5 +1,5 @@
 "use strict";
-var squeezefox = angular.module('Squeezefox', ['ngCookies']);
+var squeezefox = angular.module('Squeezefox', []);
 // ['ngRoute', 'phonecatControllers','phonecatFilters', 'phonecatServices'])
 squeezefox.controller('WindowCtrl', ['$scope', function ($scope) {
     $scope.selectedPlayer = {playerid: "",
