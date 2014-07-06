@@ -1,12 +1,19 @@
 "use strict";
-var squeezefox = angular.module('Squeezefox', []);
+var squeezefox = angular.module('Squeezefox', [])
+.config( [
+    '$compileProvider',
+    function( $compileProvider )
+    {   
+        $compileProvider.imgSrcSanitizationWhitelist(/^\s*(https?|ftp|mailto|app):/);
+    }
+]);
 // ['ngRoute', 'phonecatControllers','phonecatFilters', 'phonecatServices'])
 squeezefox.controller('WindowCtrl', ['$scope', function ($scope) {
-    $scope.selectedPlayer = {playerid: "",
-                             name: ""};
+    $scope.selectedPlayer = { playerid  : "",
+                              name      : ""};
     localforage.getItem('selectedPlayer', function(cachedSelectedPlayer) {
         $scope.selectedPlayer = cachedSelectedPlayer || {playerid: "", name: ""};
-    })
+    });
                                 //{playerid: "00:04:20:2b:39:ec", name: ''}; //XXX make dynamic
     $scope.current_window = "play";
     $scope.hidden = false;
@@ -143,17 +150,18 @@ squeezefox.controller('PlayerStatusCtrl', ['$scope', '$http', '$interval', funct
               * (see bottom of this file)
              */
             return;
-            }
+        }
         $scope.JSONRPC({"id":1,"method":"slim.request","params":[$scope.selectedPlayer.playerid, ["status","-", 50, "tags:gABbehldiqtyrSuoKLNJ"]]}, function(xhr) {
             //xhr.response.result.mode (play, stop, pause)
-            $scope.playerTitle = xhr.response.result.current_title;
-            $scope.$parent.playing = (xhr.response.result.mode == "play");
+            var rs = xhr.response.result;
+            $scope.playerTitle = rs.current_title;
+            $scope.$parent.playing = (rs.mode == "play");
             $scope.$parent.active = true;
-            $scope.$parent.power = xhr.response.result.power;
-            $scope.$parent.shuffle = xhr.response.result['playlist shuffle'];
-            $scope.repeat = xhr.response.result['playlist repeat'];
-            $scope.$parent.playlist.list = xhr.response.result.playlist_loop;
-            $scope.$parent.playlist.current = xhr.response.result.playlist_cur_index;
+            $scope.$parent.power = rs.power;
+            $scope.$parent.shuffle = rs['playlist shuffle'];
+            $scope.repeat = rs['playlist repeat'];
+            $scope.$parent.playlist.list = rs.playlist_loop;
+            $scope.$parent.playlist.current = rs.playlist_cur_index;
             var currentlyPlaying;
             for (var entry of $scope.$parent.playlist.list) {
                 if (entry['playlist index'] == $scope.$parent.playlist.current) {
@@ -162,9 +170,9 @@ squeezefox.controller('PlayerStatusCtrl', ['$scope', '$http', '$interval', funct
                     $scope.currentTitle = currentlyPlaying.title;
                 }
             }
-            if ('remoteMeta' in xhr.response.result) {
-                var rm = xhr.response.result.remoteMeta; //$scope.playlist.list[$scope.playlist.current];
-                $scope.artworkURL = rm.artwork_url || "img/icons/icon128x128.png";
+            if ('remoteMeta' in rs) {
+                var rm = rs.remoteMeta; //$scope.playlist.list[$scope.playlist.current];
+                $scope.artworkURL = rm.artwork_url || "img/cover-missing.png";
             }
             lastUpdate = Date.now();
         });

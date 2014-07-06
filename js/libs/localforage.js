@@ -1,6 +1,6 @@
 /*!
     localForage -- Offline Storage, Improved
-    Version 0.8.1
+    Version 0.9.1
     http://mozilla.github.io/localForage
     (c) 2013-2014 Mozilla, Apache License 2.0
 */
@@ -722,14 +722,14 @@ requireModule('promise/polyfill').polyfill();
 
         return new Promise(function(resolve, reject) {
             var openreq = indexedDB.open(dbInfo.name, dbInfo.version);
-            openreq.onerror = function withStoreOnError() {
+            openreq.onerror = function() {
                 reject(openreq.error);
             };
-            openreq.onupgradeneeded = function withStoreOnUpgradeNeeded() {
+            openreq.onupgradeneeded = function() {
                 // First time setup: create an empty object store
                 openreq.result.createObjectStore(dbInfo.storeName);
             };
-            openreq.onsuccess = function withStoreOnSuccess() {
+            openreq.onsuccess = function() {
                 db = openreq.result;
                 resolve();
             };
@@ -762,6 +762,8 @@ requireModule('promise/polyfill').polyfill();
 
                     reject(req.error);
                 };
+            }, function(err) {
+               reject(err) ;
             });
         });
     }
@@ -773,18 +775,27 @@ requireModule('promise/polyfill').polyfill();
                 var store = db.transaction(dbInfo.storeName, 'readwrite')
                               .objectStore(dbInfo.storeName);
 
-                // Cast to undefined so the value passed to callback/promise is
-                // the same as what one would get out of `getItem()` later.
-                // This leads to some weirdness (setItem('foo', undefined) will
-                // return "null"), but it's not my fault localStorage is our
-                // baseline and that it's weird.
-                if (value === undefined) {
-                    value = null;
+                // The reason we don't _save_ null is because IE 10 does
+                // not support saving the `null` type in IndexedDB. How
+                // ironic, given the bug below!
+                // See: https://github.com/mozilla/localForage/issues/161
+                if (value === null) {
+                    value = undefined;
                 }
 
                 var req = store.put(value, key);
                 req.onsuccess = function() {
-                    deferCallback(callback,value);
+                    // Cast to undefined so the value passed to
+                    // callback/promise is the same as what one would get out
+                    // of `getItem()` later. This leads to some weirdness
+                    // (setItem('foo', undefined) will return `null`), but
+                    // it's not my fault localStorage is our baseline and that
+                    // it's weird.
+                    if (value === undefined) {
+                        value = null;
+                    }
+
+                    deferCallback(callback, value);
 
                     resolve(value);
                 };
@@ -795,6 +806,8 @@ requireModule('promise/polyfill').polyfill();
 
                     reject(req.error);
                 };
+            }, function(err) {
+               reject(err) ;
             });
         });
     }
@@ -808,13 +821,11 @@ requireModule('promise/polyfill').polyfill();
 
                 // We use `['delete']` instead of `.delete` because IE 8 will
                 // throw a fit if it sees the reserved word "delete" in this
-                // scenario. See: https://github.com/mozilla/localForage/pull/67
+                // scenario.
+                // See: https://github.com/mozilla/localForage/pull/67
                 //
                 // This can be removed once we no longer care about IE 8, for
                 // what that's worth.
-                // TODO: Write a test against this? Maybe IE in general? Also,
-                // make sure the minify step doesn't optimise this to `.delete`,
-                // though it currently doesn't.
                 var req = store['delete'](key);
                 req.onsuccess = function() {
 
@@ -844,6 +855,8 @@ requireModule('promise/polyfill').polyfill();
                         reject(error);
                     }
                 };
+            }, function(err) {
+               reject(err) ;
             });
         });
     }
@@ -869,6 +882,8 @@ requireModule('promise/polyfill').polyfill();
 
                     reject(req.error);
                 };
+            }, function(err) {
+               reject(err) ;
             });
         });
     }
@@ -896,6 +911,8 @@ requireModule('promise/polyfill').polyfill();
 
                     reject(req.error);
                 };
+            }, function(err) {
+               reject(err) ;
             });
         });
     }
@@ -964,6 +981,8 @@ requireModule('promise/polyfill').polyfill();
 
                     reject(req.error);
                 };
+            }, function(err) {
+               reject(err) ;
             });
         });
     }
@@ -1002,6 +1021,8 @@ requireModule('promise/polyfill').polyfill();
 
                     reject(req.error);
                 };
+            }, function(err) {
+               reject(err) ;
             });
         });
     }
@@ -1061,6 +1082,11 @@ requireModule('promise/polyfill').polyfill();
     // `if (window.chrome && window.chrome.runtime)` code.
     // See: https://github.com/mozilla/localForage/issues/68
     try {
+        // If localStorage isn't available, we get outta here!
+        // This should be inside a try catch
+        if (!this.localStorage || !('setItem' in this.localStorage)) {
+            return;
+        }
         // Initialize localStorage and create a variable to use throughout
         // the code.
         localStorage = this.localStorage;
@@ -1096,7 +1122,8 @@ requireModule('promise/polyfill').polyfill();
     var TYPE_UINT32ARRAY = 'ui32';
     var TYPE_FLOAT32ARRAY = 'fl32';
     var TYPE_FLOAT64ARRAY = 'fl64';
-    var TYPE_SERIALIZED_MARKER_LENGTH = SERIALIZED_MARKER_LENGTH + TYPE_ARRAYBUFFER.length;
+    var TYPE_SERIALIZED_MARKER_LENGTH = SERIALIZED_MARKER_LENGTH +
+                                        TYPE_ARRAYBUFFER.length;
 
     // Remove all keys from the datastore, effectively destroying all data in
     // the app's key/value store!
@@ -1134,7 +1161,7 @@ requireModule('promise/polyfill').polyfill();
                     }
 
                     if (callback) {
-                        callback(result, null);
+                        callback(result);
                     }
 
                     resolve(result);
@@ -1154,7 +1181,12 @@ requireModule('promise/polyfill').polyfill();
         var _this = this;
         return new Promise(function(resolve) {
             _this.ready().then(function() {
-                var result = localStorage.key(n);
+                var result;
+                try {
+                    result = localStorage.key(n);
+                } catch (error) {
+                    result = null;
+                }
 
                 // Remove the prefix from the key, if a key is found.
                 if (result) {
@@ -1233,7 +1265,8 @@ requireModule('promise/polyfill').polyfill();
         // If we haven't marked this string as being specially serialized (i.e.
         // something other than serialized JSON), we can just return it and be
         // done with it.
-        if (value.substring(0, SERIALIZED_MARKER_LENGTH) !== SERIALIZED_MARKER) {
+        if (value.substring(0,
+            SERIALIZED_MARKER_LENGTH) !== SERIALIZED_MARKER) {
             return JSON.parse(value);
         }
 
@@ -1241,10 +1274,12 @@ requireModule('promise/polyfill').polyfill();
         // TypedArray. First we separate out the type of data we're dealing
         // with from the data itself.
         var serializedString = value.substring(TYPE_SERIALIZED_MARKER_LENGTH);
-        var type = value.substring(SERIALIZED_MARKER_LENGTH, TYPE_SERIALIZED_MARKER_LENGTH);
+        var type = value.substring(SERIALIZED_MARKER_LENGTH,
+                                   TYPE_SERIALIZED_MARKER_LENGTH);
 
         // Fill the string into a ArrayBuffer.
-        var buffer = new ArrayBuffer(serializedString.length * 2); // 2 bytes for each char
+        // 2 bytes for each char.
+        var buffer = new ArrayBuffer(serializedString.length * 2);
         var bufferView = new Uint16Array(buffer);
         for (var i = serializedString.length - 1; i >= 0; i--) {
             bufferView[i] = serializedString.charCodeAt(i);
@@ -1987,14 +2022,24 @@ requireModule('promise/polyfill').polyfill();
                     this.msIndexedDB;
 
     var supportsIndexedDB = indexedDB &&
+                            typeof indexedDB.open === 'function' &&
                             indexedDB.open('_localforage_spec_test', 1)
                                      .onupgradeneeded === null;
 
     // Check for WebSQL.
     var openDatabase = this.openDatabase;
 
-    // The actual localForage object that we expose as a module or via a global.
-    // It's extended by pulling in one of our other libraries.
+    // Check for localStorage.
+    var supportsLocalStorage = (function() {
+        try {
+            return localStorage && typeof localStorage.setItem === 'function';
+        } catch (e) {
+            return false;
+        }
+    })();
+
+    // The actual localForage object that we expose as a module or via a
+    // global. It's extended by pulling in one of our other libraries.
     var _this = this;
     var localForage = {
         INDEXEDDB: 'asyncStorage',
@@ -2043,66 +2088,88 @@ requireModule('promise/polyfill').polyfill();
             return this._driver || null;
         },
 
-        _ready: Promise.reject(new Error("setDriver() wasn't called")),
+        _ready: false,
 
-        setDriver: function(driverName, callback) {
-            var driverSet = new Promise(function(resolve, reject) {
+        _driverSet: null,
+
+        setDriver: function(driverName, callback, errorCallback) {
+            var self = this;
+
+            this._driverSet = new Promise(function(resolve, reject) {
                 if ((!supportsIndexedDB &&
                      driverName === localForage.INDEXEDDB) ||
-                    (!openDatabase && driverName === localForage.WEBSQL)) {
+                    (!openDatabase && driverName === localForage.WEBSQL) ||
+                    (!supportsLocalStorage &&
+                     driverName === localForage.LOCALSTORAGE)) {
+
+                    if (errorCallback) {
+                        errorCallback();
+                    }
+
                     reject(localForage);
 
                     return;
                 }
 
-                localForage._ready = null;
+                self._ready = null;
 
-                // We allow localForage to be declared as a module or as a library
-                // available without AMD/require.js.
+                // We allow localForage to be declared as a module or as a
+                // library available without AMD/require.js.
                 if (moduleType === MODULE_TYPE_DEFINE) {
                     require([driverName], function(lib) {
-                        localForage._extend(lib);
+                        self._extend(lib);
 
-                        resolve(localForage);
+                        if (callback) {
+                            callback();
+                        }
+                        resolve();
                     });
 
-                    // Return here so we don't resolve the promise twice.
                     return;
                 } else if (moduleType === MODULE_TYPE_EXPORT) {
                     // Making it browserify friendly
                     var driver;
                     switch (driverName) {
-                        case localForage.INDEXEDDB:
+                        case self.INDEXEDDB:
                             driver = require('./drivers/indexeddb');
                             break;
-                        case localForage.LOCALSTORAGE:
+                        case self.LOCALSTORAGE:
                             driver = require('./drivers/localstorage');
                             break;
-                        case localForage.WEBSQL:
+                        case self.WEBSQL:
                             driver = require('./drivers/websql');
                     }
 
-                    localForage._extend(driver);
+                    self._extend(driver);
                 } else {
-                    localForage._extend(_this[driverName]);
+                    self._extend(_this[driverName]);
                 }
 
-                resolve(localForage);
+                if (callback) {
+                    callback();
+                }
+
+                resolve();
             });
 
-            driverSet.then(callback, callback);
-
-            return driverSet;
+            return this._driverSet;
         },
 
         ready: function(callback) {
-            if (this._ready === null) {
-                this._ready = this._initStorage(this._config);
-            }
+            var ready = new Promise(function(resolve) {
+                localForage._driverSet.then(function() {
+                    if (localForage._ready === null) {
+                        localForage._ready = localForage._initStorage(
+                            localForage._config);
+                    }
 
-            this._ready.then(callback, callback);
+                    localForage._ready.then(resolve);
+                });
+            });
 
-            return this._ready;
+            ready.then(callback, callback);
+
+            return ready;
         },
 
         _extend: function(libraryMethodsAndProperties) {
@@ -2125,7 +2192,8 @@ requireModule('promise/polyfill').polyfill();
         storageLibrary = localForage.INDEXEDDB;
     } else if (openDatabase) { // WebSQL is available, so we'll use that.
         storageLibrary = localForage.WEBSQL;
-    } else { // If nothing else is available, we use localStorage.
+    } else if (supportsLocalStorage) { // If nothing else is available,
+                                       // we try to use localStorage.
         storageLibrary = localForage.LOCALSTORAGE;
     }
 
@@ -2134,8 +2202,13 @@ requireModule('promise/polyfill').polyfill();
         localForage.config = this.localForageConfig;
     }
 
-    // Set the (default) driver.
-    localForage.setDriver(storageLibrary);
+    // Set the (default) driver, or report the error.
+    if (storageLibrary) {
+        localForage.setDriver(storageLibrary);
+    } else {
+        localForage._ready = Promise.reject(
+            new Error('No available storage method found.'));
+    }
 
     // We allow localForage to be declared as a module or as a library
     // available without AMD/require.js.

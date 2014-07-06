@@ -24,7 +24,7 @@
         <link rel="stylesheet" href="css/lib/font-awesome-4.1.0/css/font-awesome.css">        
         <link rel="stylesheet" href="css/app.css">
 </head>
-    <body ng-controller="WindowCtrl">
+<body ng-controller="WindowCtrl">
 
 
 
@@ -51,74 +51,73 @@
     </menu>
     <h1>{{ windowTitle(current_window) }}</h1>
   </header>
+  
   <div role="main" id="main" ng-class="{{ CSS_Enabled }} ">
 
-    <div id="window-play" ng-class="CSS_window('play')"  ng-controller="PlayerStatusCtrl"><!-- playing + cover + toolbar -->
       <div id="flip_container">
-      <div id="flip_card" class="shadow" ng-class="CSS_transition()">
-        <div id="volbar">
-          <a ng-click="volumeUp()"><i class="fa fa-volume-up"></i></a>
-          <a ng-click="volumeDown()"><i class="fa fa-volume-down"></i></a><!-- XXX visual feedback when clicking vol buttons?! -->
+    <div id="window-play" ng-class="CSS_window('play')"  ng-controller="PlayerStatusCtrl"><!-- playing + cover + toolbar -->
+        <div id="flip_card" class="shadow" ng-class="CSS_transition()">
+          <div id="volbar">
+            <a ng-click="volumeUp()"><i class="fa fa-volume-up"></i></a>
+            <a ng-click="volumeDown()"><i class="fa fa-volume-down"></i></a><!-- XXX visual feedback when clicking vol buttons?! -->
+          </div>
+          <div id="playerStatus" class="front face">
+            <div id="playingInfo">
+              <div id="playingArtist">{{ currentArtist }}</div>
+              <div id="playingTitle">{{ currentTitle }} <em ng-hide="playing">(Paused)</em></div>
             </div>
-        <div id="playerStatus" class="front face">
-          <div id="playingInfo">
-            <div id="playingArtist">{{ currentArtist }}</div>
-            <div id="playingTitle">{{ currentTitle }} <em ng-hide="playing">(Paused)</em></div>
+            <div id="coverimage">
+                <img ng-src="{{ artworkURL }}">
+                <!--
+                affe maybe use this for placeholder image is given is broken
+                http://hueypetersen.com/posts/2012/07/24/creating-a-fallback-image-directive-with-angularjs/
+                -->
+            </div>
           </div>
-          <div id="coverimage">
-              <img ng-src="{{ artworkURL }}">
-              <!--
-              maybe use this for placeholder image is given is broken
-              http://hueypetersen.com/posts/2012/07/24/creating-a-fallback-image-directive-with-angularjs/
-              -->
+          <div class="back face"><!-- playlist -->
+            <section data-type="list">
+              <header>Playlist</header>
+              <ul>
+                <li ng-repeat="item in $parent.playlist.list">
+                <a href="#" ng-click="playItem(item['playlist index'])">
+                  <p><span ng-show="((playlist.current == item['playlist index']) && playing)">&#9835;</span> {{ item.title }}</p>
+                  <p ng-show="item.artist">by {{item.artist }} {{ prettyDuration(item.duration) }}</p>
+                </a>
+                </li>
+              </ul>
+            </section>            
           </div>
         </div>
-       <div class="back face"><!-- playlist -->
-        <section data-type="list">
-          <header>Playlist</header>
-          <ul>
-            <li ng-repeat="item in $parent.playlist.list">
-            <a href="#" ng-click="playItem(item['playlist index'])">
-              <p><span ng-show="((playlist.current == item['playlist index']) && playing)">&#9835;</span> {{ item.title }}</p>
-              <p ng-show="item.artist">by {{item.artist }} {{ prettyDuration(item.duration) }}</p>
-            </a>
-            </li>
-          </ul>
-          </section>            
-      </div>
-    </div>
-    </div>      <!-- end of flippy -->
+      </div>      <!-- end of flippy -->
   
-        <!-- bottom toolbar -->
-        <div role="toolbar">
-          <ul>
-            <li><button class="media-icon media-skipbackwards" ng-click="back()">Backward</button></li>          
-            <li><button class="media-icon" ng-class="CSS_Playing()" ng-click="playPause()">Play</button></li>
-            <li><button class="media-icon media-skipforward" ng-click="forward()">Forward</button></li>
-          </ul>
-          <ul>
+      <!-- bottom toolbar -->
+      <div role="toolbar">
+        <ul>
+          <li><button class="media-icon media-skipbackwards" ng-click="back()">Backward</button></li>          
+          <li><button class="media-icon" ng-class="CSS_Playing()" ng-click="playPause()">Play</button></li>
+          <li><button class="media-icon media-skipforward" ng-click="forward()">Forward</button></li>
+        </ul>
+        <ul>
           <li><button ng-click="transitionToggle()" class="media-icon media-playlistfilter"></button></li>
-            
           <li><button class="media-icon" ng-class="CSS_Shuffle()" ng-click="toggleShuffle()">Toggle Shuffle</button></li> <!-- media-shuffleoff -->
-          </ul>
-        </div>
+        </ul>
+      </div>
     </div><!-- end of playing window -->
 
     <div id="window-music" ng-class="CSS_window('music')" ng-controller="MusicSearchCtrl">
 
-              <form role="search" class="bottom">
-                <button type="submit" ng-click="search(searchterm)">Search</button>
-                <p>
-                  <input type="text" placeholder="Enter song name..." required="" ng-model="searchterm">
-                  <button type="reset">Clear</button>
-                </p>
-              </form>
-        <section data-type="list" ng-show="searchresults">
-                      <nav data-type="scrollbar"></nav>      
-          <header>Search Results</header>
-          <ul>
-            <li ng-repeat="item in searchresults">
-            
+      <form role="search" class="bottom">
+        <button type="submit" ng-click="search(searchterm)">Search</button>
+        <p>
+          <input type="text" placeholder="Enter song name..." required="" ng-model="searchterm">
+          <button type="reset">Clear</button>
+        </p>
+      </form>
+      <section data-type="list" ng-show="searchresults">
+        <nav data-type="scrollbar"></nav>      
+        <header>Search Results</header>
+        <ul>
+          <li ng-repeat="item in searchresults">
             <aside ng-show="searchdetails[item.track_id]" class="pack-end">
               <img alt="placeholder" ng-src="{{ searchdetails[item.track_id].coverurl }}">
             </aside>
@@ -126,72 +125,71 @@
               <p>{{ item.track }}</p>
               <p ng-show="searchdetails[item.track_id]">by {{ searchdetails[item.track_id].artist }}</p>
             </a>
-            </li>
-          </ul>
-          </section>
-          <form role="dialog" data-type="action" ng-show="showTrackDialog">
-            <header>{{ dialogItem.track }}</header>            
-            <menu>
-              <button ng-click="playItem(dialogItem)">Play now</button>
-              <button ng-click="addItem(dialogItem)">Add to the queue</button>
-              <button ng-click="showTrackDialog=false">Cancel</button>
-            </menu>
-          </form>
-
-
+          </li>
+        </ul>
+      </section>
+      <form role="dialog" data-type="action" ng-show="showTrackDialog">
+        <header>{{ dialogItem.track }}</header>            
+        <menu>
+          <button ng-click="playItem(dialogItem)">Play now</button>
+          <button ng-click="addItem(dialogItem)">Add to the queue</button>
+          <button ng-click="showTrackDialog=false">Cancel</button>
+        </menu>
+      </form>
     </div>
+    
     <div id="window-favorites" ng-class="CSS_window('favorites')" ng-controller="FavoritesCtrl">
-        <section data-type="list">
-          <header>Favorites</header>
-          <ul>
-            <li><!-- XXX only for my personal use, wouldnt work well in a realease -->
-              <a href="#" ng-click="playDeezer()">
-              <p>Deezer Loved Tracks</p>
-            </a>
-            </li>            
-            <li ng-repeat="item in favorites">
-            <!--
-            <aside class="pack-end">
-              <img alt="placeholder" src="x">
-            </aside>-->
-            <a href="#" ng-click="playFavorite(item.id)">
-              <p>{{ item.name }}</p>
-            </a>
-            </li>
+      <section data-type="list">
+        <header>Favorites</header>
+        <ul>
+          <li><!-- XXX only for my personal use, wouldnt work well in a realease -->
+            <a href="#" ng-click="playDeezer()">
+            <p>Deezer Loved Tracks</p>
+          </a>
+          </li>            
+          <li ng-repeat="item in favorites">
+          <!--
+          <aside class="pack-end">
+            <img alt="placeholder" src="x">
+          </aside>-->
+          <a href="#" ng-click="playFavorite(item.id)">
+            <p>{{ item.name }}</p>
+          </a>
+          </li>
 
-          </ul>
-          </section>    
+        </ul>
+      </section>    
     </div>
     <div id="window-settings" ng-class="CSS_window('settings')" ng-controller="SettingsCtrl">
-            <form>
-              <fieldset>
-                <legend class="action">Server Address</legend>
-                <p ng-hide="$parent.server.addr">First enter server IP or hostname and the port.</p>
-                <section>
-                  <p>
-                    <input type="text" placeholder="192.168.1.1" required="" ng-model="server.addr">
-                    <button type="reset">Clear</button>
-                  </p>
-                  <p>
-                    <input type="text" placeholder="9000" value="9000" required="" ng-model="server.port">
-                    <button type="reset">Clear</button>
-                  </p>
-                  <a class="recommend" role="button" href="#" ng-click="tryServer()">Find Players</a>
-                </section>
-              </fieldset>
-              <fieldset>
-                <legend class="action">Player</legend>
-                <p ng-hide="players">You must select a server before you can pick a player.</p>
-                <p ng-hide="$parent.selectedPlayer.name && players">Now please select a player:</p>
-                <section ng-show="players">            
-                  <select ng-model="$parent.selectedPlayer" ng-options="player.name for player in players">
-                  </select>
-                </section>
-              </fieldset>              
-            </form>
+      <form>
+        <fieldset>
+          <legend class="action">Server Address</legend>
+          <p ng-hide="$parent.server.addr">First enter server IP or hostname and the port.</p>
+          <section>
+            <p>
+              <input type="text" placeholder="192.168.1.1" required="" ng-model="server.addr">
+              <button type="reset">Clear</button>
+            </p>
+            <p>
+              <input type="text" placeholder="9000" value="9000" required="" ng-model="server.port">
+              <button type="reset">Clear</button>
+            </p>
+            <a class="recommend" role="button" href="#" ng-click="tryServer()">Find Players</a>
+          </section>
+        </fieldset>
+        <fieldset>
+          <legend class="action">Player</legend>
+          <p ng-hide="players">You must select a server before you can pick a player.</p>
+          <p ng-hide="$parent.selectedPlayer.name && players">Now please select a player:</p>
+          <section ng-show="players">            
+            <select ng-model="$parent.selectedPlayer" ng-options="player.name for player in players">
+            </select>
+          </section>
+        </fieldset>              
+      </form>
     </div>
 
-</div>
+  </div>
 </section>
 
 
