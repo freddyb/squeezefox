@@ -31,7 +31,6 @@ section[role="region"] > header:first-child {
   text-transform: capitalize;
 }
 
-
 /* override drawer style and stuff
  * this allows scrolling below drawer, while
  * the header stayes fixed:
@@ -41,3 +40,52 @@ $("#drawer").style.overflowY = "scroll"; $("#drawer > header").style.position = 
 #drawer { overflow-y: scroll; }
 #drawer > header { position: fixed; width: 100%; }
 #main { padding-top: 5rem; }
+
+/*
+ * Volumebar CSS
+ */
+
+input[type="range"] {
+  background-color: black;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  width: 85%;
+  float:right;
+}
+
+#volbar {
+  color: white;
+  font-size: 3em;
+  width: 100%;
+  background-color: rgba(0,0,0,0.7);
+  position: fixed;
+  z-index: 9;
+  border-bottom: 3px solid #01c5ed;
+}
+
+.animate-show {
+  margin-top: 50px;
+}
+
+.animate-show.ng-hide-add.ng-hide-add-active,
+.animate-show.ng-hide-remove.ng-hide-remove-active {
+  -webkit-transition: all ease-out 0.5s;
+  transition: all ease-out 0.5s;
+}
+
+.animate-show.ng-hide {
+  margin-top: 0;
+}
+
+#volbar > a {
+  margin-left: 10px;
+  color: #01c5ed;
+}
+#volbar > input[type="range"] {
+  margin-right: 5px;
+  background: none;
+}
+#volbar > input[type="range"]:focus {
+  box-shadow: none;
+}
