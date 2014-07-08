@@ -1,12 +1,42 @@
 "use strict";
-var squeezefox = angular.module('Squeezefox', []);
+var squeezefox = angular.module('Squeezefox', ['ngAnimate'])
+.config( [
+    '$compileProvider',
+    function( $compileProvider )
+    {   
+        $compileProvider.imgSrcSanitizationWhitelist(/^\s*(https?|ftp|mailto|app):/);
+    }
+]);
+
+/*
+ * Test if input-value is valid port number (code from angularJS website)
+ */
+squeezefox.directive('portnumber', function() {
+  return {
+    require: 'ngModel',
+    link: function(scope, elm, attrs, ctrl) {
+      ctrl.$parsers.unshift(function(viewValue) {
+        if (viewValue > 0 && viewValue < 65536) {
+          // it is valid
+          ctrl.$setValidity('portnumber', true);
+          return viewValue;
+        } else {
+          // it is invalid, return undefined (no model update)
+          ctrl.$setValidity('portnumber', false);
+          return undefined;
+        }
+      });
+    }
+  };
+});
+
 // ['ngRoute', 'phonecatControllers','phonecatFilters', 'phonecatServices'])
-squeezefox.controller('WindowCtrl', ['$scope', function ($scope) {
-    $scope.selectedPlayer = {playerid: "",
-                             name: ""};
+squeezefox.controller('WindowCtrl', ['$scope', '$http', function ($scope, $http) {
+    $scope.selectedPlayer = { playerid  : "",
+                              name      : ""};
     localforage.getItem('selectedPlayer', function(cachedSelectedPlayer) {
         $scope.selectedPlayer = cachedSelectedPlayer || {playerid: "", name: ""};
-    })
+    });
                                 //{playerid: "00:04:20:2b:39:ec", name: ''}; //XXX make dynamic
     $scope.current_window = "play";
     $scope.hidden = false;
@@ -19,6 +49,9 @@ squeezefox.controller('WindowCtrl', ['$scope', function ($scope) {
     $scope.power = 0;
     $scope.playing = false;
     $scope.shuffle = 0;
+    $scope.volume = 0;
+    
+    $scope.cssVolbarVisible = false;
     
     $scope.JSONRPC = function JSONRPC(payload, callback) {
         var xhr = new XMLHttpRequest({mozSystem: true});
@@ -33,49 +66,76 @@ squeezefox.controller('WindowCtrl', ['$scope', function ($scope) {
         };
     };
     
+    /*
+     * wrapper to JSONRPC. do a slim request on the current set playerid
+     * params is a list, eg: ["play", ""]
+     */
+    $scope.slimRequest = function slimRequest(params, callback, playerid) {
+        playerid = typeof playerid !== 'undefined' ? playerid : $scope.selectedPlayer.playerid;
+        $scope.JSONRPC({"id":1,"method":"slim.request","params":[playerid, params]}, callback);
+    }
+    
     $scope.play = function play() { // toggle
-        $scope.JSONRPC({"id":1,"method":"slim.request","params":[$scope.selectedPlayer.playerid, ["play", ""]]});
+        $scope.slimRequest(["play", ""]);
+        //$scope.JSONRPC({"id":1,"method":"slim.request","params":[$scope.selectedPlayer.playerid, ["play", ""]]});
         //$scope.getStatus();
     };
 
     $scope.playPause = function playPause() { // toggle
         var newplaying = $scope.playing ? "1" : "0";
         $scope.playing = newplaying;
-        $scope.JSONRPC({"id":1,"method":"slim.request","params":[$scope.selectedPlayer.playerid, ["pause", newplaying, "", ""]]});
+        $scope.slimRequest(["pause", newplaying, "", ""]);
         //$scope.getStatus();
     };
     $scope.backward = function backward() {
-        $scope.JSONRPC({"id":1,"method":"slim.request","params":[$scope.selectedPlayer.playerid, ["button","jump_rew"]]});
+        $scope.slimRequest(["button","jump_rew"]);
         //$scope.getStatus();
     };
     $scope.forward = function forward() {
-        $scope.JSONRPC({"id":1,"method":"slim.request","params":[$scope.selectedPlayer.playerid, ["button","jump_fwd"]]});
+        $scope.slimRequest(["button","jump_fwd"]);
         //$scope.getStatus();
     };
     $scope.toggleShuffle = function toggleShuffle() {
         // 0 = disabled, 1 = per song, 2 = per album (unused)
         var newshuffle = $scope.shuffle == "0" ? "1" : "0";
         $scope.shuffle = newshuffle;
-        $scope.JSONRPC({"id":1,"method":"slim.request","params": [$scope.selectedPlayer.playerid, ["playlist","shuffle", newshuffle]]});
+        $scope.slimRequest(["playlist","shuffle", newshuffle]);
     }
 
 
     $scope.powerToggle = function powerToggle() {
         var newpower = $scope.power ? "0" : "1";
         $scope.power = newpower;
-        $scope.JSONRPC({"id":1,"method":"slim.request","params":[$scope.selectedPlayer.playerid, ["power", newpower]]});
+        $scope.slimRequest(["power", newpower]);
         //$scope.getStatus();
     };
     $scope.powerOn = function powerOn() {
-        $scope.JSONRPC({"id":1,"method":"slim.request","params":[$scope.selectedPlayer.playerid, ["power","1"]]});
+        $scope.slimRequest(["power","1"]);
         //$scope.getStatus();
     };
     $scope.volumeUp = function volup() {
-        $scope.JSONRPC({"id":1,"method":"slim.request","params":[$scope.selectedPlayer.playerid, ["mixer","volume", "+2.5"]]});
-    }
+        $scope.slimRequest(["mixer","volume", "+2.5"]);
+    };
     $scope.volumeDown = function voldown() {
-        $scope.JSONRPC({"id":1,"method":"slim.request","params":[$scope.selectedPlayer.playerid, ["mixer","volume", "-2.5"]]});
-    }
+        $scope.slimRequest(["mixer","volume", "-2.5"]);
+    };
+    $scope.getVolume = function getVolume() {
+        $scope.slimRequest(['mixer','volume','?'], function(xhr){ $scope.volume = xhr.response.result.mixer.volume; });
+    };
+    /*
+     * send volume change to server
+     * Instead of using ng-click to push state changes to the server, it is suggested to create services and overload their save prototype http://plnkr.co/edit/urCRofoJKiPkEtuHAvPF?p=preview 
+     */
+    $scope.postVolume = function () {
+        $scope.slimRequest(['mixer','volume',$scope.volume]);
+    };
+    $scope.toggleMute = function toggleMute() {
+        // oddly this logs "0" and "-0", yet the css selector/input value shows value > 0..
+        //console.log($scope.volume);
+        $scope.volume *= -1;
+        //console.log($scope.volume);
+        $scope.slimRequest(['mixer','muting','toggle']);
+    };
 
     
     $scope.changeWindow = function changeWindow(name) {
@@ -137,23 +197,24 @@ squeezefox.controller('PlayerStatusCtrl', ['$scope', '$http', '$interval', funct
     // Update Status
     $scope.getStatus = function getStatus() {
         //XXX replace 50 with max(50,playlistsize)
-        if ($scope.$parent.hidden) {
+        if ($scope.$parent.hidden || typeof $scope.server.addr == 'undefined' || typeof $scope.server.port == 'undefined') {
              /* skips XHR when app is minimized, this is set
               * outside of angular with the page visibility api.
               * (see bottom of this file)
              */
             return;
-            }
+        }
         $scope.JSONRPC({"id":1,"method":"slim.request","params":[$scope.selectedPlayer.playerid, ["status","-", 50, "tags:gABbehldiqtyrSuoKLNJ"]]}, function(xhr) {
             //xhr.response.result.mode (play, stop, pause)
-            $scope.playerTitle = xhr.response.result.current_title;
-            $scope.$parent.playing = (xhr.response.result.mode == "play");
-            $scope.$parent.active = true;
-            $scope.$parent.power = xhr.response.result.power;
-            $scope.$parent.shuffle = xhr.response.result['playlist shuffle'];
-            $scope.repeat = xhr.response.result['playlist repeat'];
-            $scope.$parent.playlist.list = xhr.response.result.playlist_loop;
-            $scope.$parent.playlist.current = xhr.response.result.playlist_cur_index;
+            var rs = xhr.response.result;
+            $scope.playerTitle                  = rs.current_title;
+            $scope.$parent.playing              = (rs.mode == "play");
+            $scope.$parent.active               = true;
+            $scope.$parent.power                = rs.power;
+            $scope.$parent.shuffle              = rs['playlist shuffle'];
+            $scope.repeat                       = rs['playlist repeat'];
+            $scope.$parent.playlist.list        = rs.playlist_loop;
+            $scope.$parent.playlist.current     = rs.playlist_cur_index;
             var currentlyPlaying;
             for (var entry of $scope.$parent.playlist.list) {
                 if (entry['playlist index'] == $scope.$parent.playlist.current) {
@@ -162,9 +223,9 @@ squeezefox.controller('PlayerStatusCtrl', ['$scope', '$http', '$interval', funct
                     $scope.currentTitle = currentlyPlaying.title;
                 }
             }
-            if ('remoteMeta' in xhr.response.result) {
-                var rm = xhr.response.result.remoteMeta; //$scope.playlist.list[$scope.playlist.current];
-                $scope.artworkURL = rm.artwork_url || "img/icons/icon128x128.png";
+            if ('remoteMeta' in rs) {
+                var rm = rs.remoteMeta; //$scope.playlist.list[$scope.playlist.current];
+                $scope.artworkURL = rm.artwork_url || "img/cover-missing.png";
             }
             lastUpdate = Date.now();
         });
@@ -194,8 +255,8 @@ squeezefox.controller('PlayerStatusCtrl', ['$scope', '$http', '$interval', funct
             return d
         }
         if (total == 0) { return; }
-            var m = parseInt(total%3600 / 60)
-            var s = total % 60        
+        var m = parseInt(total%3600 / 60)
+        var s = total % 60        
         if (total < 3600) {
             return "("+m+":"+pad(s)+")";
         }
@@ -205,6 +266,7 @@ squeezefox.controller('PlayerStatusCtrl', ['$scope', '$http', '$interval', funct
         }
     }
 }]);
+
 squeezefox.controller('MusicSearchCtrl', ['$scope', function ($scope) {
     $scope.searchterm = "";
     $scope.searchresults = []
@@ -246,6 +308,7 @@ squeezefox.controller('MusicSearchCtrl', ['$scope', function ($scope) {
 
     }
 }]);
+
 squeezefox.controller('FavoritesCtrl', ['$scope', function ($scope) {
     $scope.favorites = []
     localforage.getItem("favorites", function (cachedFavorites) {
