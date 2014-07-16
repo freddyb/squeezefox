@@ -30,26 +30,50 @@ squeezefox.directive('portnumber', function() {
   };
 });
 
-// ['ngRoute', 'phonecatControllers','phonecatFilters', 'phonecatServices'])
-squeezefox.controller('WindowCtrl', ['$scope', '$http', function ($scope, $http) {
-    $scope.selectedPlayer = { playerid  : "",
-                              name      : ""};
-    localforage.getItem('selectedPlayer', function(cachedSelectedPlayer) {
-        $scope.selectedPlayer = cachedSelectedPlayer || {playerid: "", name: ""};
-    });
-                                //{playerid: "00:04:20:2b:39:ec", name: ''}; //XXX make dynamic
+squeezefox.controller('WindowCtrl', ['$scope', function ($scope) {
+    
+    $scope.players = [];
+    $scope.selectedPlayer = { playerid: '', name: ''};
+    /*
+     * {playerid: "00:04:20:2b:39:ec", name: ''}; //XXX make dynamic
+     */
     $scope.current_window = "play";
     $scope.hidden = false;
-    $scope.server = { addr: '', port: '' }
-    localforage.getItem('server', function (cachedServer) {
-        $scope.server = cachedServer || ({ addr: '', port: '' });
+    $scope.server = { 
+        addr: '', 
+        port: '',
+        retries: 0 // unused atm
+    };
+    localforage.getItem('server').then(function (cachedServer) {
+        if (typeof cachedServer != 'undefined') {
+            $scope.server = cachedServer;
+        }
     });
+    
+    localforage.getItem('players').then(function (cachedPlayers) {
+        $scope.players = cachedPlayers || [];
+    })
+    .then(function(){
+        localforage.getItem('selectedPlayer', function(cachedSelectedPlayer) {
+            /*
+             * this is because the <select> tag will only remember the selection if ng-model is member of the array in ng-options (comparison by reference)
+             * so we have to search the equal reference by eg playerid
+             */
+            for (var i = 0; i < $scope.players.length; i++) {
+                if ($scope.players[i].playerid == cachedSelectedPlayer.playerid) {
+                    $scope.selectedPlayer = $scope.players[i];
+                    return;
+                }
+            }
+        });
+    });
+    
     $scope.playlist = {current: 0, list: []};
-    $scope.active = false;
-    $scope.power = 0;
-    $scope.playing = false;
-    $scope.shuffle = 0;
-    $scope.volume = 0;
+    $scope.active   = false;
+    $scope.power    = 0;
+    $scope.playing  = false;
+    $scope.shuffle  = 0;
+    $scope.volume   = 0;
     
     $scope.cssVolbarVisible = false;
     
@@ -62,82 +86,106 @@ squeezefox.controller('WindowCtrl', ['$scope', '$http', function ($scope, $http)
             localforage.setItem("server", $scope.server);
             localforage.setItem("selectedPlayer", $scope.selectedPlayer);
             $scope.active = true;
+            if ($scope.server.retries > 0) {
+                $scope.server.retries = 0;
+            }
             if (callback) { callback(this); }
         };
+        xhr.onerror = function (e) {
+            // XXX general error handling? provide another callback?
+            $scope.server.retries++;
+            utils.status.show('Connection problems');
+            //console.log(e);
+        };
     };
-    
+        
     /*
      * wrapper to JSONRPC. do a slim request on the current set playerid
      * params is a list, eg: ["play", ""]
      */
-    $scope.slimRequest = function slimRequest(params, callback, playerid) {
+    $scope.queryPlayer = function (params, callback, playerid) {
         playerid = typeof playerid !== 'undefined' ? playerid : $scope.selectedPlayer.playerid;
         $scope.JSONRPC({"id":1,"method":"slim.request","params":[playerid, params]}, callback);
     }
+    /*
+     * do a query with empty playerid
+     */
+    $scope.queryServer = function (params, callback) {
+        $scope.JSONRPC({"id":1,"method":"slim.request","params":["", params]}, callback);
+    }
     
     $scope.play = function play() { // toggle
-        $scope.slimRequest(["play", ""]);
-        //$scope.JSONRPC({"id":1,"method":"slim.request","params":[$scope.selectedPlayer.playerid, ["play", ""]]});
+        $scope.queryPlayer(["play", ""]);
         //$scope.getStatus();
     };
 
     $scope.playPause = function playPause() { // toggle
         var newplaying = $scope.playing ? "1" : "0";
-        $scope.playing = newplaying;
-        $scope.slimRequest(["pause", newplaying, "", ""]);
+        $scope.playing = !$scope.playing;
+        $scope.queryPlayer(["pause",newplaying]);
         //$scope.getStatus();
     };
+    
     $scope.backward = function backward() {
-        $scope.slimRequest(["button","jump_rew"]);
+        $scope.queryPlayer(["button","jump_rew"]);
         //$scope.getStatus();
     };
+    
     $scope.forward = function forward() {
-        $scope.slimRequest(["button","jump_fwd"]);
+        $scope.queryPlayer(["button","jump_fwd"]);
         //$scope.getStatus();
     };
+    
     $scope.toggleShuffle = function toggleShuffle() {
         // 0 = disabled, 1 = per song, 2 = per album (unused)
         var newshuffle = $scope.shuffle == "0" ? "1" : "0";
         $scope.shuffle = newshuffle;
-        $scope.slimRequest(["playlist","shuffle", newshuffle]);
+        $scope.queryPlayer(["playlist","shuffle", newshuffle]);
     }
-
 
     $scope.powerToggle = function powerToggle() {
         var newpower = $scope.power ? "0" : "1";
         $scope.power = newpower;
-        $scope.slimRequest(["power", newpower]);
+        $scope.queryPlayer(["power", newpower]);
         //$scope.getStatus();
     };
+    
     $scope.powerOn = function powerOn() {
-        $scope.slimRequest(["power","1"]);
+        $scope.queryPlayer(["power","1"]);
         //$scope.getStatus();
     };
+    
     $scope.volumeUp = function volup() {
-        $scope.slimRequest(["mixer","volume", "+2.5"]);
+        $scope.queryPlayer(["mixer","volume", "+2.5"]);
     };
+    
     $scope.volumeDown = function voldown() {
-        $scope.slimRequest(["mixer","volume", "-2.5"]);
+        $scope.queryPlayer(["mixer","volume", "-2.5"]);
     };
+    
     $scope.getVolume = function getVolume() {
-        $scope.slimRequest(['mixer','volume','?'], function(xhr){ $scope.volume = xhr.response.result.mixer.volume; });
+        $scope.queryPlayer(['mixer','volume','?'], function(xhr){ 
+            // XXX see issue #24. volumebar not compatible with all players.
+            if (typeof xhr.response.result.mixer != 'undefined') {
+                $scope.volume = xhr.response.result.mixer.volume; 
+            }
+            else {
+                $scope.volume = 0;
+            }
+        });
     };
     /*
      * send volume change to server
      * Instead of using ng-click to push state changes to the server, it is suggested to create services and overload their save prototype http://plnkr.co/edit/urCRofoJKiPkEtuHAvPF?p=preview 
      */
     $scope.postVolume = function () {
-        $scope.slimRequest(['mixer','volume',$scope.volume]);
+        $scope.queryPlayer(['mixer','volume',$scope.volume]);
     };
     $scope.toggleMute = function toggleMute() {
-        // oddly this logs "0" and "-0", yet the css selector/input value shows value > 0..
-        //console.log($scope.volume);
         $scope.volume *= -1;
-        //console.log($scope.volume);
-        $scope.slimRequest(['mixer','muting','toggle']);
+        $scope.queryPlayer(['mixer','muting','toggle']);
     };
 
-    
     $scope.changeWindow = function changeWindow(name) {
         if (['play', 'music', 'favorites', 'settings'].indexOf(name) !== -1) {
             $scope.current_window = name;
@@ -151,6 +199,9 @@ squeezefox.controller('WindowCtrl', ['$scope', '$http', function ($scope, $http)
             case "play":
                 return "Now playing"
             break;
+            case "music":
+                return "Search";
+            break;
             default:
                 return capitalize(t);
         }
@@ -159,17 +210,11 @@ squeezefox.controller('WindowCtrl', ['$scope', '$http', function ($scope, $http)
     // CSS functions XXX rewrite with ng-show
     $scope.CSS_Enabled = function() {
         $scope.active = true;
-    };
-    $scope.CSS_Playing = function() {
-        return $scope.playing ? 'media-pause' : 'media-play';
-    };
-    $scope.CSS_Shuffle = function() {
-        return $scope.shuffle ? 'media-shuffleon' : 'media-shuffleoff';
-    };    
+    }; 
 
+    // unused? -- obama
     $scope.CSS_Power = function() {
         return $scope.power ? "brightness" : "lower-brightness";
-
     } 
 
     $scope.CSS_window = function CSS_window(name) {
@@ -177,22 +222,65 @@ squeezefox.controller('WindowCtrl', ['$scope', '$http', function ($scope, $http)
         var scope = angular.element(sb).scope();
         return (name == $scope.current_window) ? "" : "hiddenwindow"
     }
-
-
+    
+    // show/hide additional info in music search
+    // close function is in NestedWindow controller..
+    $scope.openArtistInfo = function() {
+        document.querySelector('#artistinfo').classList.remove('right');
+        document.querySelector('#artistinfo').classList.add('current');
+        document.querySelector('[data-position="current"]').classList.remove('current');
+        document.querySelector('[data-position="current"]').classList.add('left');
+    }
+    
+    // moved trackdialog here, because i use it in the "nested window" too
+    $scope.trackDialog = function trackDialog(item) {
+        if ('title' in item) {
+            item.track = item.title;
+        }
+        document.querySelector('#trackdialog').classList.remove('fade-out');
+        document.querySelector('#trackdialog').classList.add('fade-in');
+        $scope.dialogItem = item;
+        $scope.showTrackDialog = true;
+        
+    }
+    
+    $scope.trackDialogClose = function() {
+        document.querySelector('#trackdialog').classList.remove('fade-in');
+        document.querySelector('#trackdialog').classList.add('fade-out');
+        $scope.showTrackDialog = false;
+    }
+    
+    $scope.prettyDuration = function prettyDuration(total) {
+        function pad(d) {
+            if (d < 10) { return '0'+d }
+            return d
+        }
+        if (total == 0) { return; }
+        var m = parseInt(total%3600 / 60),
+            s = parseInt(total % 60);
+        if (total < 3600) {
+            return "("+m+":"+pad(s)+")";
+        }
+        else {
+            var h = parseInt(total / 3600);
+            return "("+h+":"+pad(m)+":"+pad(s)+")";
+        }
+    }
+    
 /*<div id="window-music"></div>
     <div id="window-favorites"></div>
     <div id="window-settings"></div>*/
     
 }]);
 
-squeezefox.controller('PlayerStatusCtrl', ['$scope', '$http', '$interval', function ($scope, $http, $interval) {
+squeezefox.controller('PlayerStatusCtrl', ['$scope', '$interval', function ($scope, $interval) {
     // defaults
-    var lastUpdate = 0;
-    $scope.playerTitle = "";
+    var lastUpdate       = 0;
+    $scope.playerTitle   = "";
     $scope.currentArtist = "";
-    $scope.currentTitle = "";
-    $scope.artworkURL = "img/cover-missing.png";
-    $scope.showPlaylist = false;
+    $scope.currentTitle  = "";
+    $scope.artworkURL    = "img/cover-missing.png";
+    $scope.showPlaylist  = false;
 
     // Update Status
     $scope.getStatus = function getStatus() {
@@ -204,7 +292,7 @@ squeezefox.controller('PlayerStatusCtrl', ['$scope', '$http', '$interval', funct
              */
             return;
         }
-        $scope.JSONRPC({"id":1,"method":"slim.request","params":[$scope.selectedPlayer.playerid, ["status","-", 50, "tags:gABbehldiqtyrSuoKLNJ"]]}, function(xhr) {
+        $scope.queryPlayer(["status","-", 50, "tags:gABbehldiqtyrSuojcKLNJ"], function(xhr) {
             //xhr.response.result.mode (play, stop, pause)
             var rs = xhr.response.result;
             $scope.playerTitle                  = rs.current_title;
@@ -225,7 +313,13 @@ squeezefox.controller('PlayerStatusCtrl', ['$scope', '$http', '$interval', funct
             }
             if ('remoteMeta' in rs) {
                 var rm = rs.remoteMeta; //$scope.playlist.list[$scope.playlist.current];
-                $scope.artworkURL = rm.artwork_url || "img/cover-missing.png";
+                $scope.artworkURL = rm.artwork_url;
+            }
+            else if (rs.playlist_loop[rs.playlist_cur_index].coverart == "1") {
+                $scope.artworkURL = "http://"+$scope.server.addr+':'+$scope.server.port+"/music/"+rs.playlist_loop[rs.playlist_cur_index].coverid+"/cover_300x300";
+            }
+            else {
+                $scope.artworkURL = "img/cover-missing.png";
             }
             lastUpdate = Date.now();
         });
@@ -233,7 +327,7 @@ squeezefox.controller('PlayerStatusCtrl', ['$scope', '$http', '$interval', funct
     $scope.refresher = undefined;
     if (typeof $scope.refresher == "undefined") {
         $scope.getStatus();
-        $scope.refresher = $interval(function() { $scope.getStatus(); }, 5000);
+        $scope.refresher = $interval(function() { $scope.getStatus(); }, 10000);
     }
 
     $scope.transitionToggle = function transitionToggle() {
@@ -246,67 +340,160 @@ squeezefox.controller('PlayerStatusCtrl', ['$scope', '$http', '$interval', funct
     // 
     $scope.playItem = function playItem(index) {
         //XXX update playlists and display?
-        $scope.JSONRPC({"id":1,"method":"slim.request","params": [$scope.selectedPlayer.playerid, ["playlist","index",index,""]]});
+        $scope.queryPlayer(["playlist","index",index,""]);
             
     }
-    $scope.prettyDuration = function prettyDuration(total) {
-        function pad(d) {
-            if (d < 10) { return '0'+d }
-            return d
-        }
-        if (total == 0) { return; }
-        var m = parseInt(total%3600 / 60)
-        var s = total % 60        
-        if (total < 3600) {
-            return "("+m+":"+pad(s)+")";
-        }
-        else {
-            var h = parseInt(total / 3600);
-            return "("+h+":"+pad(m)+":"+pad(s)+")";
-        }
-    }
+    
 }]);
 
 squeezefox.controller('MusicSearchCtrl', ['$scope', function ($scope) {
-    $scope.searchterm = "";
-    $scope.searchresults = []
-    $scope.searchdetails = {};
-    $scope.showTrackDialog = false;
-    $scope.dialogItem = {};
+    $scope.searchterm      = "";
+    $scope.searchres       = { 'artist': [], 'album': [], 'track': [] };
+    $scope.trackdetails    = {};
+    $scope.$parent.showTrackDialog = false;
+    $scope.$parent.dialogItem      = {};
+    $scope.noresults       = { 'track': false, 'artist': false, 'album': false };
+    $scope.searchprogress  = { 'track': false, 'album': false }; // artist is returned by "search" aswell. (though behavior seems different.. eg. a "artists" query for "d" will also return "Diverse Interpreten" while "search" wont.. but the search doesnt work anyways like expected. 
+    $scope.cssHideRes      = { 'track': false, 'artist': false, 'album': false };
+        
+    // XXX many duplicate code, refactor somehow?
     $scope.search = function search(term) {
-        $scope.JSONRPC({"id":1,"method":"slim.request","params":["",["search", "0","20","term:"+term]]}, function(xhr) {
-            var tracks = []
-            if ('tracks_loop' in xhr.response.result) {
-                tracks = xhr.response.result.tracks_loop; // array with objects that have track_id, track properties
+        $scope.searchprogress = { 'track': true, 'album': true };
+        $scope.cssHideRes     = { 'track': false, 'artist': false, 'album': false };
+        $scope.searchres      = { 'artist': [], 'album': [], 'track': [] };
+               
+        /* search albums independently, because this query will return also artist, year, cover
+         * while "search" will only return album title (and we'd need another XX queries to fill in the details..)
+        */
+        $scope.queryServer(["albums", "0", "20", "search:"+term, "tags:layj"], function(xhr) {
+            $scope.searchprogress.album = false; // XXX when xhr fails, progress will not be reset! spins forever!
+            var rs = xhr.response.result;
+            var albums = [];
+            if ('albums_loop' in rs) {
+                albums = rs.albums_loop;
+                $scope.noresults.album = false;
             }
-            $scope.searchresults = tracks;
-            // fill in details for list (e.g. artist)
+            else {
+                $scope.noresults.album = true;
+            }
+            $scope.searchres.album = albums;
+        });
+        $scope.queryServer(["search", "0","20","term:"+term], function(xhr) {
+            $scope.searchprogress.track = false;
+            var rs = xhr.response.result;
+            
+            var tracks = []
+            if ('tracks_loop' in rs) {
+                tracks = rs.tracks_loop; // array with objects that have track_id, track properties 
+                $scope.noresults.track = false;
+            }
+            else {
+                $scope.noresults.track = true;
+            }
+            $scope.searchres.track = tracks;
+            
+            var artists = [];
+            if ('contributors_loop' in rs) {
+                artists = rs.contributors_loop;
+                $scope.noresults.artist = false;
+            }
+            else {
+                $scope.noresults.artist = true;
+            }
+            $scope.searchres.artist = artists;
+            
+            // fill in details for track list (e.g. artist)
             for (var item of tracks) {
-                $scope.JSONRPC({"id":1,"method":"slim.request","params":["",["songinfo", "0","11","track_id:"+item.track_id]]}, function(xhr) {
+                $scope.queryServer(["songinfo", "0","11","track_id:"+item.track_id], function(xhr) {
                     var songinfo = xhr.response.result.songinfo_loop;
-                    $scope.searchdetails[parseInt(songinfo[0].id)] = {
-                        title: songinfo[1].title, artist: songinfo[2].artist,
-                        coverid: songinfo[3].coverid, duration: songinfo[4].duration,
-                        album_id: songinfo[5].album_id,
-                        album: songinfo[5].album,
-                        coverurl: "http://"+$scope.server.addr+':'+$scope.server.port+"/music/"+songinfo[3].coverid+"/cover_150x150_o" };
+                    $scope.trackdetails[parseInt(songinfo[0].id)] = {
+                        title: songinfo[1].title, 
+                        artist: songinfo[2].artist
+                    };
+                    var x = $scope.trackdetails[parseInt(songinfo[0].id)];
+                    var i = 3; // if coverid is not available index is shifted -.- the output format is very unuseful.
+                    if (typeof songinfo[3].coverid != 'undefined') {
+                        x.coverid  = songinfo[3].coverid;
+                        i++;
+                    }
+                    x.duration = songinfo[i++].duration,
+                    x.album_id = songinfo[i++].album_id,
+                    x.album    = songinfo[i].album,
+                    x.coverurl = "http://"+$scope.server.addr+':'+$scope.server.port+"/music/"+x.coverid+"/cover_150x150_o"
                 });
+                    
             }
         });
     }
-    $scope.trackDialog = function trackDialog(item) {
-        $scope.dialogItem = item;
-        $scope.showTrackDialog = true;
+    // open nested window with tracks belonging to artist/album
+    $scope.searchTracksByArtist = function(item) {
+        $scope.nestedWindow.list = [];
+        $scope.nestedWindow.title = item.contributor;
+        $scope.nestedWindow.type = 'artist';
+        $scope.nestedWindow.searchprogress = true;
+        $scope.queryServer(["titles", "0","20","artist_id:"+item.contributor_id, "tags:dcl"], function(xhr) {
+            $scope.nestedWindow.searchprogress = false; //XXX spin forever if xhr fails..
+            if ('titles_loop' in xhr.response.result) {
+                $scope.nestedWindow.list = xhr.response.result.titles_loop;
+            }
+            
+        });
+        $scope.openArtistInfo();
     }
-    $scope.addItem = function addItem(item) { // add to queue
-        $scope.showTrackDialog=false;
-        $scope.JSONRPC({"id":1,"method":"slim.request","params":["00:04:20:2b:39:ec",["playlist","addtracks","track.titlesearch="+item.track]]})
+    $scope.searchTracksByAlbum = function(item) {
+        $scope.nestedWindow.list = [];
+        $scope.nestedWindow.title = item.artist;
+        $scope.nestedWindow.subtitle = item.album+' ('+item.year+')'; // not nice.
+        $scope.nestedWindow.type = 'album';
+        $scope.nestedWindow.img = 'http://'+$scope.server.addr+':'+$scope.server.port+'/music/'+item.artwork_track_id+'/cover_150x150';
+        $scope.nestedWindow.searchprogress = true;
+        $scope.queryServer(["titles", "0","20","album_id:"+item.id, "tags:dcl"], function(xhr) {
+            $scope.nestedWindow.searchprogress = false; //XXX spin forever if xhr fails..
+            if ('titles_loop' in xhr.response.result) {
+                $scope.nestedWindow.list = xhr.response.result.titles_loop;
+            }
+        });
+        $scope.openArtistInfo();
     }
-    $scope.playItem = function playItem(item) { // play now
-        $scope.showTrackDialog=false;
-        $scope.JSONRPC({"id":1,"method":"slim.request","params":["00:04:20:2b:39:ec",["playlist","loadtracks","track.titlesearch="+item.track]]})
+    
+    $scope.$parent.addItem = function addItem(item) { // add to queue
+        $scope.trackDialogClose();
+        $scope.queryPlayer(["playlist","addtracks","track.titlesearch="+(item.track ? item.track : item.title) // what if 2 tracks same name? add contributor.namesearch= property? API = fail..
+    }
+    $scope.$parent.playItem = function playItem(item) { // play now
+        $scope.trackDialogClose();
+        //$scope.queryPlayer(["playlist","loadtracks","track.titlesearch="+item.track])
+        var plen = $scope.$parent.playlist.list.length;
+        $scope.addItem(item); // strange there is no easier api call for this. (or is there?) also this is not 100% safe, eg when a track ends before moving is done?
+        $scope.queryPlayer(["playlist","move", plen, 0]);
+        $scope.queryPlayer(["playlist","index", 0]);
+    }
+}]);
 
+squeezefox.controller('NestedWndCtrl', ['$scope', function ($scope) {
+    
+    /* XXX this is dependant on MusicWindowCtrl :( but to make the buildingblocks slidein "nested window" work, i had to change 
+     * the HTML structure in such a way that a new controller was needed. im offline now, maybe read up angular docs later to fix 
+     * this.
+     */
+    
+    // the nestedWindow can contain tracks by artist or album (like the gaia music player)
+    $scope.$parent.nestedWindow    = { 
+        'title': '', 
+        'subtitle': '', 
+        'type': '', 
+        'img': 'img/cover-missing.png', 
+        'list':[],
+        'searchprogress' : false
+    };
+    
+    $scope.closeArtistInfo = function() {
+        document.querySelector('#artistinfo').classList.remove('current');
+        document.querySelector('#artistinfo').classList.add('right');
+        document.querySelector('[data-position="current"]').classList.remove('left');
+        document.querySelector('[data-position="current"]').classList.add('current');
     }
+    
 }]);
 
 squeezefox.controller('FavoritesCtrl', ['$scope', function ($scope) {
@@ -318,14 +505,14 @@ squeezefox.controller('FavoritesCtrl', ['$scope', function ($scope) {
     if (triedfavorites == false) {
         if ($scope.selectedPlayer.playerid !== "") {
             triedfavorites = true;
-            $scope.JSONRPC({"id":1,"method":"slim.request","params": [$scope.selectedPlayer.playerid, ["favorites","items","","9999"]]}, function(xhr) {
+            $scope.queryServer(["favorites","items","","9999"], function(xhr) {
                 $scope.favorites = xhr.response.result.loop_loop;
                 localforage.setItem("favorites", xhr.response.result.loop_loop);
             });
         }
     }
     $scope.playFavorite = function playFavorite(id) {
-        $scope.JSONRPC({"id":1,"method":"slim.request","params": [$scope.selectedPlayer.playerid, ["favorites","playlist","play","item_id:"+id]]}); 
+        $scope.queryServer(["favorites","playlist","play","item_id:"+id]); 
     }
 
     $scope.playDeezer = function() {
@@ -339,10 +526,7 @@ squeezefox.controller('FavoritesCtrl', ['$scope', function ($scope) {
 }]);
 
 squeezefox.controller('SettingsCtrl', ['$scope', function ($scope) {
-    $scope.players = [];
-    localforage.getItem("players", function (cachedPlayers) {
-        $scope.players = cachedPlayers || [];
-    });
+   
     /*     {
             "model" : "baby",
             "connected" : 1,
@@ -360,22 +544,21 @@ squeezefox.controller('SettingsCtrl', ['$scope', function ($scope) {
 
 
     $scope.tryServer = function tryServer() {
-        $scope.JSONRPC({"id":1,"method":"slim.request","params":["",["serverstatus",0,999]]}, function(xhr) {
+        $scope.queryServer(["serverstatus",0,999], function(xhr) {
             $scope.$parent.active = true; // errback and feedback.            
-            $scope.players = xhr.response.result.players_loop;
+            $scope.$parent.players = xhr.response.result.players_loop;
             localforage.setItem("players", xhr.response.result.players_loop);
         });
     }
 }]);
 
-/*
 angular.element(document).ready(function() {
     document.addEventListener("visibilitychange", function() {
         // used to limit getStatus XHR
         angular.element(document.body).scope().hidden = document.hidden;
     }, false);
-    
-    // fire a first getStatus asap:
-    angular.element(document.querySelector("#window-play")).scope().getStatus
+        
+    // fire a first getStatus asap: 
+    // -- rather not because localforage might not have loaded the server data yet
+    //angular.element(document.querySelector("#window-play")).scope().getStatus
 });
-*/

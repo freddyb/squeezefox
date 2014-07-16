@@ -11,8 +11,7 @@
   list-style: none;
   margin: 0;
   padding: 0;
-  overflow: hidden;
-  overflow-y: scroll;
+  overflow: visible; /* is hidden needed? i see no difference except a "border"? using overflow: hidden/scroll creates a horizontal scrolling bug? */
 }
 
 [data-type="list"] strong {

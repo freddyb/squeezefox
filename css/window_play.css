@@ -6,8 +6,10 @@
 }
 #coverimage > img {
   max-width: 95%;
-  box-shadow: 0 0 10px #777;
+  margin-top: 4rem;
+  box-shadow: 0px 0px 10px rgba(150,150,150,0.6);
 }
+
 #playerStatus {
   font-size: 12pt;
   color:white;
@@ -15,12 +17,27 @@
   clear: both;
 }
 #playingInfo {
-  padding-left: 5px;
+  position: fixed;
+  margin-top: -13px;
+  width: 100%;
+  background-color: rgba(0,0,0,0.8);
+}
+#playingArtist {
+  padding-left: 2rem;
 }
 #playingTitle {
+  padding-left: 2rem;
   font-weight: bold;
 }
-
+#playingInfo > em {
+  float: right;
+  margin-right: 2rem;
+  margin-top: 3px;
+}
+#playingInfo > div {
+  float: left;
+  width: 70%;
+}
 #flip_container {
   position: relative;
   width: 100%;
@@ -32,7 +49,7 @@
   width: 100%;
   height: 100%;
   transform-style: preserve-3d;
-  transition: all .3s linear;
+  transition: all .5s linear;
   backface-visibility: hidden;
 }
 .performtransition {
@@ -55,4 +72,27 @@
   color: white;
   background-color: black;
   backface-visibility: hidden;
+}
+
+/* animation for the now playing indicator in the playlist */
+.np-anim {
+  -moz-animation: nowplayicon 2s infinite linear;
+}
+
+@-moz-keyframes nowplayicon {
+  0% {
+    -moz-transform: translateY(0px);
+  }
+  25% {
+    -moz-transform: translateY(3px);
+  }
+  50% {
+    -moz-transform: translateY(0px);
+  }
+  75% {
+    -moz-transform: translateY(-3px);
+  }
+  100% {
+    -moz-transform: translateY(0px);
+  }
 }
