@@ -1,5 +1,12 @@
 "use strict";
-var squeezefox = angular.module('Squeezefox', []);
+var squeezefox = angular.module('Squeezefox', [])
+.config([
+    '$compileProvider',
+    function( $compileProvider )
+    {
+        $compileProvider.imgSrcSanitizationWhitelist(/^\s*(https?|ftp|mailto|app):/);
+    }
+]);
 // ['ngRoute', 'phonecatControllers','phonecatFilters', 'phonecatServices'])
 squeezefox.controller('WindowCtrl', ['$scope', function ($scope) {
     $scope.selectedPlayer = {playerid: "",
