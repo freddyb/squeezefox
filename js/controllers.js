@@ -458,7 +458,7 @@ squeezefox.controller('MusicSearchCtrl', ['$scope', function ($scope) {
     
     $scope.$parent.addItem = function addItem(item) { // add to queue
         $scope.trackDialogClose();
-        $scope.queryPlayer(["playlist","addtracks","track.titlesearch="+(item.track ? item.track : item.title) // what if 2 tracks same name? add contributor.namesearch= property? API = fail..
+        $scope.queryPlayer(["playlist","addtracks","track.titlesearch="+(item.track ? item.track : item.title)]); // what if 2 tracks same name? add contributor.namesearch= property? API = fail..
     }
     $scope.$parent.playItem = function playItem(item) { // play now
         $scope.trackDialogClose();

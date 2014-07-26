@@ -2,6 +2,7 @@
 <html ng-app="Squeezefox" ng-csp>
 	<head>
 		<meta charset="utf-8">
+    <meta http-equiv="Content-Security-Policy" content="default-src *; script-src 'self'; object-src 'none'; style-src 'self' 'unsafe-inline'">
 		<title>Squeezefox</title>
 		<meta name="description" content="Squeezefox is a remote control for logitech squeezebox servers and players">
 		<meta name="viewport" content="width=device-width">
@@ -74,7 +75,7 @@
                     <em class="fa fa-2x fa-pause" ng-hide="playing"></em>
                   </div>
                   <div id="coverimage">
-                    <img ng-src="{{ artworkURL }}">
+                    <img ng-model="artworkURL" ng-src="{{ artworkURL }}">
                     <!--
                       maybe use this for placeholder image if given is broken
                       http://hueypetersen.com/posts/2012/07/24/creating-a-fallback-image-directive-with-angularjs/
