@@ -67,7 +67,7 @@
             <div id="playingTitle">{{ currentTitle }} <em ng-hide="playing">(Paused)</em></div>
           </div>
           <div id="coverimage">
-              <img ng-src="{{ artworkURL }}">
+              <img ng-model="artworkURL" ng-src="{{ artworkURL }}">
               <!--
               maybe use this for placeholder image is given is broken
               http://hueypetersen.com/posts/2012/07/24/creating-a-fallback-image-directive-with-angularjs/
