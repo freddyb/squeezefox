@@ -268,7 +268,7 @@ squeezefox.controller('MusicSearchCtrl', ['$scope', function ($scope) {
     $scope.showTrackDialog = false;
     $scope.dialogItem = {};
     $scope.search = function search(term) {
-        $scope.JSONRPC({"id":1,"method":"slim.request","params":["",["search", "0","20","term:"+term]]}, function(xhr) {
+        $scope.queryServer(["search", "0","20","term:"+term], function(xhr) {
             var tracks = []
             if ('tracks_loop' in xhr.response.result) {
                 tracks = xhr.response.result.tracks_loop; // array with objects that have track_id, track properties
@@ -276,7 +276,7 @@ squeezefox.controller('MusicSearchCtrl', ['$scope', function ($scope) {
             $scope.searchresults = tracks;
             // fill in details for list (e.g. artist)
             for (var item of tracks) {
-                $scope.JSONRPC({"id":1,"method":"slim.request","params":["",["songinfo", "0","11","track_id:"+item.track_id]]}, function(xhr) {
+                $scope.queryServer(["songinfo", "0","11","track_id:"+item.track_id], function(xhr) {
                     var songinfo = xhr.response.result.songinfo_loop;
                     $scope.searchdetails[parseInt(songinfo[0].id)] = {
                         title: songinfo[1].title, artist: songinfo[2].artist,
@@ -294,7 +294,7 @@ squeezefox.controller('MusicSearchCtrl', ['$scope', function ($scope) {
     }
     $scope.addItem = function addItem(item) { // add to queue
         $scope.showTrackDialog=false;
-        $scope.JSONRPC({"id":1,"method":"slim.request","params":["00:04:20:2b:39:ec",["playlist","addtracks","track.titlesearch="+item.track]]})
+        $scope.queryPlayer(["playlist","addtracks","track.titlesearch="+(item.track ? item.track : item.title)]); // what if 2 tracks same name? add contributor.namesearch= property? API = fail..
     }
     $scope.playItem = function playItem(item) { // play now
         $scope.showTrackDialog=false;
