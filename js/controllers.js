@@ -1,5 +1,5 @@
 "use strict";
-var squeezefox = angular.module('Squeezefox', [])
+var squeezefox = angular.module('Squeezefox', ['ngAnimate'])
 .config([
     '$compileProvider',
     function( $compileProvider )
@@ -7,25 +7,45 @@ var squeezefox = angular.module('Squeezefox', [])
         $compileProvider.imgSrcSanitizationWhitelist(/^\s*(https?|ftp|mailto|app):/);
     }
 ]);
-// ['ngRoute', 'phonecatControllers','phonecatFilters', 'phonecatServices'])
+
 squeezefox.controller('WindowCtrl', ['$scope', function ($scope) {
+    
+    $scope.players = [];
     $scope.selectedPlayer = {playerid: "",
                              name: ""};
-    localforage.getItem('selectedPlayer', function(cachedSelectedPlayer) {
-        $scope.selectedPlayer = cachedSelectedPlayer || {playerid: "", name: ""};
-    })
+
                                 //{playerid: "00:04:20:2b:39:ec", name: ''}; //XXX make dynamic
     $scope.current_window = "play";
     $scope.hidden = false;
-    $scope.server = { addr: '', port: '' }
-    localforage.getItem('server', function (cachedServer) {
-        $scope.server = cachedServer || ({ addr: '', port: '' });
+    $scope.server = { addr: '', port: '', retries: 0 }
+    localforage.getItem('server').then(function (cachedServer) {
+        if (typeof cachedServer != 'undefined') {
+            $scope.server = cachedServer;
+        }
     });
+    localforage.getItem('players').then(function (cachedPlayers) {
+        $scope.players = cachedPlayers || [];
+    })
+    .then(function(){
+        localforage.getItem('selectedPlayer', function(cachedSelectedPlayer) {
+            /*
+            * this is because the <select> tag will only remember the selection if ng-model is member of the array in ng-options (comparison by reference)
+            * so we have to search the equal reference by eg playerid
+            */
+            for (var i = 0; i < $scope.players.length; i++) {
+                if ($scope.players[i].playerid == cachedSelectedPlayer.playerid) {
+                    $scope.selectedPlayer = $scope.players[i];
+                    return;
+                }
+            }
+        });
+    });
+    
     $scope.playlist = {current: 0, list: []};
-    $scope.active = false;
-    $scope.power = 0;
-    $scope.playing = false;
-    $scope.shuffle = 0;
+    $scope.active   = false;
+    $scope.power    = 0;
+    $scope.playing  = false;
+    $scope.shuffle  = 0;
     
     $scope.JSONRPC = function JSONRPC(payload, callback) {
         var xhr = new XMLHttpRequest({mozSystem: true});
@@ -36,53 +56,76 @@ squeezefox.controller('WindowCtrl', ['$scope', function ($scope) {
             localforage.setItem("server", $scope.server);
             localforage.setItem("selectedPlayer", $scope.selectedPlayer);
             $scope.active = true;
+            // count retries for error handling? yagni?
+            if ($scope.server.retries > 0) {
+                $scope.server.retries = 0;
+            }
             if (callback) { callback(this); }
+        };
+        xhr.onerror = function (e) {
+            // XXX general error handling? provide another callback?
+            $scope.server.retries++;
         };
     };
     
+    /*
+    * wrapper to JSONRPC. do a slim request on the current set playerid
+    * params is a list, eg: ["play", ""]
+    */
+    $scope.queryPlayer = function (params, callback, playerid) {
+        playerid = typeof playerid !== 'undefined' ? playerid : $scope.selectedPlayer.playerid;
+        $scope.JSONRPC({"id":1,"method":"slim.request","params":[playerid, params]}, callback);
+    }
+    /*
+    * do a query with empty playerid
+    */
+    $scope.queryServer = function (params, callback) {
+        $scope.JSONRPC({"id":1,"method":"slim.request","params":["", params]}, callback);
+    }
+    
     $scope.play = function play() { // toggle
-        $scope.JSONRPC({"id":1,"method":"slim.request","params":[$scope.selectedPlayer.playerid, ["play", ""]]});
+        $scope.queryPlayer(["play", ""]);
         //$scope.getStatus();
     };
 
     $scope.playPause = function playPause() { // toggle
         var newplaying = $scope.playing ? "1" : "0";
-        $scope.playing = newplaying;
-        $scope.JSONRPC({"id":1,"method":"slim.request","params":[$scope.selectedPlayer.playerid, ["pause", newplaying, "", ""]]});
+        $scope.playing = !$scope.playing;
+        $scope.queryPlayer(["pause",newplaying]);
         //$scope.getStatus();
     };
     $scope.backward = function backward() {
-        $scope.JSONRPC({"id":1,"method":"slim.request","params":[$scope.selectedPlayer.playerid, ["button","jump_rew"]]});
+        $scope.queryPlayer(["button","jump_rew"]);
         //$scope.getStatus();
     };
     $scope.forward = function forward() {
-        $scope.JSONRPC({"id":1,"method":"slim.request","params":[$scope.selectedPlayer.playerid, ["button","jump_fwd"]]});
+        $scope.queryPlayer(["button","jump_fwd"]);
         //$scope.getStatus();
     };
     $scope.toggleShuffle = function toggleShuffle() {
         // 0 = disabled, 1 = per song, 2 = per album (unused)
         var newshuffle = $scope.shuffle == "0" ? "1" : "0";
         $scope.shuffle = newshuffle;
-        $scope.JSONRPC({"id":1,"method":"slim.request","params": [$scope.selectedPlayer.playerid, ["playlist","shuffle", newshuffle]]});
+        $scope.queryPlayer(["playlist","shuffle", newshuffle]);
     }
 
 
     $scope.powerToggle = function powerToggle() {
         var newpower = $scope.power ? "0" : "1";
         $scope.power = newpower;
-        $scope.JSONRPC({"id":1,"method":"slim.request","params":[$scope.selectedPlayer.playerid, ["power", newpower]]});
+        $scope.queryPlayer(["power", newpower]);
         //$scope.getStatus();
     };
     $scope.powerOn = function powerOn() {
-        $scope.JSONRPC({"id":1,"method":"slim.request","params":[$scope.selectedPlayer.playerid, ["power","1"]]});
+        $scope.queryPlayer(["power","1"]);
         //$scope.getStatus();
     };
     $scope.volumeUp = function volup() {
-        $scope.JSONRPC({"id":1,"method":"slim.request","params":[$scope.selectedPlayer.playerid, ["mixer","volume", "+2.5"]]});
-    }
+        $scope.queryPlayer(["mixer","volume", "+2.5"]);
+    };
     $scope.volumeDown = function voldown() {
-        $scope.JSONRPC({"id":1,"method":"slim.request","params":[$scope.selectedPlayer.playerid, ["mixer","volume", "-2.5"]]});
-    }
+        $scope.queryPlayer(["mixer","volume", "-2.5"]);
+    };
 
     
     $scope.changeWindow = function changeWindow(name) {
