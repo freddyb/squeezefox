@@ -177,33 +177,34 @@ squeezefox.controller('WindowCtrl', ['$scope', function ($scope) {
 
 squeezefox.controller('PlayerStatusCtrl', ['$scope', '$http', '$interval', function ($scope, $http, $interval) {
     // defaults
-    var lastUpdate = 0;
-    $scope.playerTitle = "";
+    var lastUpdate       = 0;
+    $scope.playerTitle   = "";
     $scope.currentArtist = "";
-    $scope.currentTitle = "";
-    $scope.artworkURL = "img/cover-missing.png";
-    $scope.showPlaylist = false;
+    $scope.currentTitle  = "";
+    $scope.artworkURL    = "img/cover-missing.png";
+    $scope.showPlaylist  = false;
 
     // Update Status
     $scope.getStatus = function getStatus() {
         //XXX replace 50 with max(50,playlistsize)
-        if ($scope.$parent.hidden) {
+        if ($scope.$parent.hidden || typeof $scope.server.addr == 'undefined' || typeof $scope.server.port == 'undefined') {
              /* skips XHR when app is minimized, this is set
               * outside of angular with the page visibility api.
               * (see bottom of this file)
              */
             return;
             }
-        $scope.JSONRPC({"id":1,"method":"slim.request","params":[$scope.selectedPlayer.playerid, ["status","-", 50, "tags:gABbehldiqtyrSuoKLNJ"]]}, function(xhr) {
+        $scope.queryPlayer(["status","-", 50, "tags:gABbehldiqtyrSuojcKLNJ"], function(xhr) {
             //xhr.response.result.mode (play, stop, pause)
-            $scope.playerTitle = xhr.response.result.current_title;
-            $scope.$parent.playing = (xhr.response.result.mode == "play");
-            $scope.$parent.active = true;
-            $scope.$parent.power = xhr.response.result.power;
-            $scope.$parent.shuffle = xhr.response.result['playlist shuffle'];
-            $scope.repeat = xhr.response.result['playlist repeat'];
-            $scope.$parent.playlist.list = xhr.response.result.playlist_loop;
-            $scope.$parent.playlist.current = xhr.response.result.playlist_cur_index;
+            var rs = xhr.response.result;
+            $scope.playerTitle              = rs.current_title;
+            $scope.$parent.playing          = (rs.mode == "play");
+            $scope.$parent.active           = true;
+            $scope.$parent.power            = rs.power;
+            $scope.$parent.shuffle          = rs['playlist shuffle'];
+            $scope.repeat                   = rs['playlist repeat'];
+            $scope.$parent.playlist.list    = rs.playlist_loop;
+            $scope.$parent.playlist.current = rs.playlist_cur_index;
             var currentlyPlaying;
             for (var entry of $scope.$parent.playlist.list) {
                 if (entry['playlist index'] == $scope.$parent.playlist.current) {
@@ -212,9 +213,15 @@ squeezefox.controller('PlayerStatusCtrl', ['$scope', '$http', '$interval', funct
                     $scope.currentTitle = currentlyPlaying.title;
                 }
             }
-            if ('remoteMeta' in xhr.response.result) {
-                var rm = xhr.response.result.remoteMeta; //$scope.playlist.list[$scope.playlist.current];
-                $scope.artworkURL = rm.artwork_url || "img/icons/icon128x128.png";
+            if ('remoteMeta' in rs) {
+                var rm = rs.remoteMeta; //$scope.playlist.list[$scope.playlist.current];
+                $scope.artworkURL = rm.artwork_url;
+            }
+            else if (rs.playlist_loop[rs.playlist_cur_index].coverart == "1") {
+                $scope.artworkURL = "http://"+$scope.server.addr+':'+$scope.server.port+"/music/"+rs.playlist_loop[rs.playlist_cur_index].coverid+"/cover_300x300";
+            }
+            else {
+                $scope.artworkURL = "img/cover-missing.png";
             }
             lastUpdate = Date.now();
         });
@@ -235,8 +242,7 @@ squeezefox.controller('PlayerStatusCtrl', ['$scope', '$http', '$interval', funct
     // 
     $scope.playItem = function playItem(index) {
         //XXX update playlists and display?
-        $scope.JSONRPC({"id":1,"method":"slim.request","params": [$scope.selectedPlayer.playerid, ["playlist","index",index,""]]});
-            
+        $scope.queryPlayer(["playlist","index",index,""]);
     }
     $scope.prettyDuration = function prettyDuration(total) {
         function pad(d) {
