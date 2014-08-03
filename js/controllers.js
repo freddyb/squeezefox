@@ -353,7 +353,7 @@ squeezefox.controller('SettingsCtrl', ['$scope', function ($scope) {
 
 
     $scope.tryServer = function tryServer() {
-        $scope.JSONRPC({"id":1,"method":"slim.request","params":["",["serverstatus",0,999]]}, function(xhr) {
+        $scope.queryServer(["serverstatus",0,999], function(xhr) {
             $scope.$parent.active = true; // errback and feedback.            
             $scope.players = xhr.response.result.players_loop;
             localforage.setItem("players", xhr.response.result.players_loop);
@@ -361,7 +361,6 @@ squeezefox.controller('SettingsCtrl', ['$scope', function ($scope) {
     }
 }]);
 
-/*
 angular.element(document).ready(function() {
     document.addEventListener("visibilitychange", function() {
         // used to limit getStatus XHR
@@ -369,6 +368,5 @@ angular.element(document).ready(function() {
     }, false);
     
     // fire a first getStatus asap:
-    angular.element(document.querySelector("#window-play")).scope().getStatus
+    //angular.element(document.querySelector("#window-play")).scope().getStatus
 });
-*/
