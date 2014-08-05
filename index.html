@@ -20,6 +20,7 @@
     <link href="buildingblocks/style/input_areas.css" rel="stylesheet" type="text/css">
     <!-- settings -->
     <link href="buildingblocks/style/buttons.css" rel="stylesheet" type="text/css">
+    <link href="buildingblocks/style/progress_activity.css" rel="stylesheet" type="text/css">
     <!-- settings -->
     <link href="buildingblocks/transitions.css" rel="stylesheet" type="text/css">
     <link href="buildingblocks/util.css" rel="stylesheet" type="text/css">
@@ -112,6 +113,12 @@
               <button type="reset">Clear</button>
             </p>
           </form>
+          <section data-type="list" ng-show="noresults.track">
+              <header>No Results</header>
+          </section>
+          <div ng-show="searchprogress.track" class="content center">
+              <progress></progress>
+          </div>
           <section data-type="list" ng-show="searchresults">
             <nav data-type="scrollbar"></nav>
             <header>Search Results</header>

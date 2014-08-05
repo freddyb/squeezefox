@@ -19,7 +19,7 @@ squeezefox.controller('WindowCtrl', ['$scope', function ($scope) {
     $scope.hidden = false;
     $scope.server = { addr: '', port: '', retries: 0 }
     localforage.getItem('server').then(function (cachedServer) {
-        if (typeof cachedServer != 'undefined') {
+        if (typeof cachedServer != 'undefined' && cachedServer != null) {
             $scope.server = cachedServer;
         }
     });
@@ -187,7 +187,14 @@ squeezefox.controller('PlayerStatusCtrl', ['$scope', '$http', '$interval', funct
     // Update Status
     $scope.getStatus = function getStatus() {
         //XXX replace 50 with max(50,playlistsize)
-        if ($scope.$parent.hidden || typeof $scope.server == 'undefined' || $scope.server == null || typeof $scope.server.addr == 'undefined' || typeof $scope.server.port == 'undefined') {
+        if ($scope.$parent.hidden || 
+            typeof $scope.server == 'undefined' || 
+            $scope.server == null || 
+            typeof $scope.server.addr == 'undefined' || 
+            typeof $scope.server.port == 'undefined' ||
+            $scope.server.addr == '' ||
+            $scope.server.port == ''
+            ) {
              /* skips XHR when app is minimized, this is set
               * outside of angular with the page visibility api.
               * (see bottom of this file)
@@ -267,11 +274,20 @@ squeezefox.controller('MusicSearchCtrl', ['$scope', function ($scope) {
     $scope.searchdetails = {};
     $scope.showTrackDialog = false;
     $scope.dialogItem = {};
+    $scope.noresults = { 'track': false };
+    $scope.searchprogress = { 'track': false };
+    
     $scope.search = function search(term) {
+        $scope.searchprogress = { 'track': true };
         $scope.queryServer(["search", "0","20","term:"+term], function(xhr) {
+            $scope.searchprogress.track = false;
             var tracks = []
             if ('tracks_loop' in xhr.response.result) {
+                $scope.noresults.track = false;
                 tracks = xhr.response.result.tracks_loop; // array with objects that have track_id, track properties
+            }
+            else {
+                $scope.noresults.track = true;
             }
             $scope.searchresults = tracks;
             // fill in details for list (e.g. artist)
@@ -332,10 +348,6 @@ squeezefox.controller('FavoritesCtrl', ['$scope', function ($scope) {
 }]);
 
 squeezefox.controller('SettingsCtrl', ['$scope', function ($scope) {
-    $scope.players = [];
-    localforage.getItem("players", function (cachedPlayers) {
-        $scope.players = cachedPlayers || [];
-    });
     /*     {
             "model" : "baby",
             "connected" : 1,
