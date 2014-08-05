@@ -314,8 +314,14 @@ squeezefox.controller('MusicSearchCtrl', ['$scope', function ($scope) {
     }
     $scope.playItem = function playItem(item) { // play now
         $scope.showTrackDialog=false;
-        $scope.JSONRPC({"id":1,"method":"slim.request","params":["00:04:20:2b:39:ec",["playlist","loadtracks","track.titlesearch="+item.track]]})
-
+        var plen = $scope.$parent.playlist.list.length;
+        /* strange there is no easier api call for this. (or is there?) 
+         * also this is not 100% safe, eg when a track ends before moving is done?
+         * XXX should play now mean: put it at pos 0 or pos 1? please test this
+         */
+        $scope.addItem(item);
+        $scope.queryPlayer(["playlist","move", plen, 0]);
+        $scope.queryPlayer(["playlist","index", 0]);
     }
 }]);
 squeezefox.controller('FavoritesCtrl', ['$scope', function ($scope) {
