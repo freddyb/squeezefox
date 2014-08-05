@@ -187,13 +187,13 @@ squeezefox.controller('PlayerStatusCtrl', ['$scope', '$http', '$interval', funct
     // Update Status
     $scope.getStatus = function getStatus() {
         //XXX replace 50 with max(50,playlistsize)
-        if ($scope.$parent.hidden || typeof $scope.server == 'undefined' || typeof $scope.server.addr == 'undefined' || typeof $scope.server.port == 'undefined') {
+        if ($scope.$parent.hidden || typeof $scope.server == 'undefined' || $scope.server == null || typeof $scope.server.addr == 'undefined' || typeof $scope.server.port == 'undefined') {
              /* skips XHR when app is minimized, this is set
               * outside of angular with the page visibility api.
               * (see bottom of this file)
              */
             return;
-            }
+        }
         $scope.queryPlayer(["status","-", 50, "tags:gABbehldiqtyrSuojcKLNJ"], function(xhr) {
             //xhr.response.result.mode (play, stop, pause)
             var rs = xhr.response.result;
