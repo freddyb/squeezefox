@@ -259,7 +259,7 @@ squeezefox.controller('PlayerStatusCtrl', ['$scope', '$http', '$interval', funct
         }
         if (total == 0) { return; }
             var m = parseInt(total%3600 / 60)
-            var s = total % 60        
+            var s = Math.floor(total % 60)
         if (total < 3600) {
             return "("+m+":"+pad(s)+")";
         }
