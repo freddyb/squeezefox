@@ -81,7 +81,7 @@
                   <ul>
                     <li ng-repeat="item in $parent.playlist.list">
                       <a href="#" ng-click="playItem(item['playlist index'])">
-                        <p><span ng-show="((playlist.current == item['playlist index']) && playing)">&#9835;</span> {{ item.title }}</p>
+                        <p><span class="fa fa-music np-anim" ng-show="((playlist.current == item['playlist index']) && playing)"></span> {{ item.title }}</p>
                         <p ng-show="item.artist">by {{item.artist }} {{ prettyDuration(item.duration) }}</p>
                       </a>
                     </li>

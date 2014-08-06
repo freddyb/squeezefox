@@ -73,3 +73,26 @@
   float:right;
   margin: 5px;
 }
+
+/* animation for the now playing indicator in the playlist */
+.np-anim {
+  -moz-animation: nowplayicon 2s infinite linear;
+}
+
+@-moz-keyframes nowplayicon {
+  0% {
+    -moz-transform: translateY(0px);
+  }
+  25% {
+    -moz-transform: translateY(3px);
+  }
+  50% {
+    -moz-transform: translateY(0px);
+  }
+  75% {
+    -moz-transform: translateY(-3px);
+  }
+  100% {
+    -moz-transform: translateY(0px);
+  }
+}
