@@ -176,7 +176,7 @@ squeezefox.controller('WindowCtrl', ['$scope', function ($scope) {
     
 }]);
 
-squeezefox.controller('PlayerStatusCtrl', ['$scope', '$http', '$interval', function ($scope, $http, $interval) {
+squeezefox.controller('PlayerStatusCtrl', ['$scope', '$interval', function ($scope, $interval) {
     // defaults
     var lastUpdate       = 0;
     $scope.playerTitle   = "";
@@ -325,6 +325,7 @@ squeezefox.controller('MusicSearchCtrl', ['$scope', function ($scope) {
         $scope.queryPlayer(["playlist","index", 0]);
     }
 }]);
+
 squeezefox.controller('FavoritesCtrl', ['$scope', function ($scope) {
     $scope.favorites = []
     localforage.getItem("favorites", function (cachedFavorites) {
