@@ -14,7 +14,6 @@ squeezefox.controller('WindowCtrl', ['$scope', function ($scope) {
     $scope.selectedPlayer = {playerid: "",
                              name: ""};
 
-                                //{playerid: "00:04:20:2b:39:ec", name: ''}; //XXX make dynamic
     $scope.current_window = "play";
     $scope.hidden = false;
     $scope.server = { addr: '', port: '', retries: 0 }
@@ -335,6 +334,7 @@ squeezefox.controller('FavoritesCtrl', ['$scope', function ($scope) {
     if (triedfavorites == false) {
         if ($scope.selectedPlayer.playerid !== "") {
             triedfavorites = true;
+            $scope.freddysbox = ("00:04:20:2b:39:ec" == $scope.$selectedPlayer.playerid);
             $scope.JSONRPC({"id":1,"method":"slim.request","params": [$scope.selectedPlayer.playerid, ["favorites","items","","9999"]]}, function(xhr) {
                 $scope.favorites = xhr.response.result.loop_loop;
                 localforage.setItem("favorites", xhr.response.result.loop_loop);
@@ -345,10 +345,13 @@ squeezefox.controller('FavoritesCtrl', ['$scope', function ($scope) {
         $scope.JSONRPC({"id":1,"method":"slim.request","params": [$scope.selectedPlayer.playerid, ["favorites","playlist","play","item_id:"+id]]}); 
     }
 
+    // show only on my squeezebox, until we have found out how this feature works and if there's API support:
+    $scope.freddysbox = false;
+
     $scope.playDeezer = function() {
         var x = new XMLHttpRequest();
         x.open("GET",
-        "http://192.168.235.2:9000/plugins/deezer/index.html?action=playall&index=4cd7c293.3.0.1&player=00%3A04%3A20%3A2b%3A39%3Aec&sess=&start=&_dc=1403809424200"
+        "http://"+$scope.server.addr+':'+$scope.server.port+ "/plugins/deezer/index.html?action=playall&index=4cd7c293.3.0.1&player="+ encodeURIComponent($scope.selectedPlayer.playerid) +"&sess=&start=&_dc=1403809424200"
         );
         x.send();
 
