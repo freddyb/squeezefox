@@ -41,8 +41,3 @@ $("#drawer").style.overflowY = "scroll"; $("#drawer > header").style.position = 
 #drawer { overflow-y: scroll; }
 #drawer > header { position: fixed; width: 100%; }
 #main { padding-top: 5rem; }
-
-/* artist/title should not overlap volumebar */
-#playingArtist,#playingTitle {
-  width: 25rem;
-}
