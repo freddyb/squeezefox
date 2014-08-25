@@ -1,3 +1,6 @@
+#window-settings {
+  padding: 0 10px;
+}
 #window-settings > form > fieldset > section > a[role="button"] {
   width: 40%; float:right;
 }
@@ -7,11 +10,30 @@
   color: grey;
 }
 
-/* text for fieldset legend is white now. */
-fieldset legend,
+fieldset {
+  border-bottom: 1px solid #00B1FF;
+}
+
+/* text for fieldset legend is BLUE now. */
+fieldset legend {
+  color: #00B1FF;
+  font-style: normal;
+  border: 0;
+  background: 0;
+}
+
 input[type="date"],
 input[type="time"],
 input[type="datetime"],
 input[type="datetime-local"] {
-  color: white;
+  color: #FFF;
+}
+
+fieldset input[type="text"] {
+  background-color: #F4F4F4;
+}
+
+select {
+  background: none;
+  background-color: #f4f4f4;
 }
