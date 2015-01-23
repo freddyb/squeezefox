@@ -18,7 +18,7 @@ squeezefox.controller('WindowCtrl', ['$scope', function ($scope) {
     // FxOS >2.2 can use volup/voldown hardware buttons:
     $scope.showVolumeBar = !(/Mobile.*Firefox\/36/).test(navigator.userAgent);
     $scope.hidden = false;
-    $scope.server = { addr: '', port: '', retries: 0 }
+    $scope.server = { addr: '', port: '', retries: 0 };
     localforage.getItem('server').then(function (cachedServer) {
         if (typeof cachedServer != 'undefined' && cachedServer != null) {
             $scope.server = cachedServer;
@@ -77,13 +77,13 @@ squeezefox.controller('WindowCtrl', ['$scope', function ($scope) {
     $scope.queryPlayer = function (params, callback, playerid) {
         playerid = typeof playerid !== 'undefined' ? playerid : $scope.selectedPlayer.playerid;
         $scope.JSONRPC({"id":1,"method":"slim.request","params":[playerid, params]}, callback);
-    }
+    };
     /*
     * do a query with empty playerid
     */
     $scope.queryServer = function (params, callback) {
         $scope.JSONRPC({"id":1,"method":"slim.request","params":["", params]}, callback);
-    }
+    };
     
     $scope.play = function play() { // toggle
         $scope.queryPlayer(["play", ""]);
@@ -109,7 +109,7 @@ squeezefox.controller('WindowCtrl', ['$scope', function ($scope) {
         var newshuffle = $scope.shuffle == "0" ? "1" : "0";
         $scope.shuffle = newshuffle;
         $scope.queryPlayer(["playlist","shuffle", newshuffle]);
-    }
+    };
 
 
     $scope.powerToggle = function powerToggle() {
@@ -134,19 +134,19 @@ squeezefox.controller('WindowCtrl', ['$scope', function ($scope) {
         if (['play', 'music', 'favorites', 'settings'].indexOf(name) !== -1) {
             $scope.current_window = name;
         }
-    }
+    };
     $scope.windowTitle = function(t) {
         function capitalize(s) {
             return s.substr(0,1).toUpperCase() + s.substr(1);
         }
         switch (t) {
             case "play":
-                return "Now playing"
+                return "Now playing";
             break;
             default:
                 return capitalize(t);
         }
-    }
+    };
 
     // CSS functions XXX rewrite with ng-show
     $scope.CSS_Enabled = function() {
@@ -162,13 +162,13 @@ squeezefox.controller('WindowCtrl', ['$scope', function ($scope) {
     $scope.CSS_Power = function() {
         return $scope.power ? "brightness" : "lower-brightness";
 
-    } 
+    };
 
     $scope.CSS_window = function CSS_window(name) {
         var sb = document.getElementById("sidebar");
         var scope = angular.element(sb).scope();
         return (name == $scope.current_window) ? "" : "hiddenwindow"
-    }
+    };
 
 
 /*<div id="window-music"></div>
@@ -217,7 +217,7 @@ squeezefox.controller('PlayerStatusCtrl', ['$scope', '$interval', function ($sco
             var currentlyPlaying;
             for (var entry of $scope.$parent.playlist.list) {
                 if (entry['playlist index'] == $scope.$parent.playlist.current) {
-                    var currentlyPlaying = entry;
+                    currentlyPlaying = entry;
                     $scope.currentArtist = currentlyPlaying.artist;
                     $scope.currentTitle = currentlyPlaying.title;
                 }
@@ -234,7 +234,7 @@ squeezefox.controller('PlayerStatusCtrl', ['$scope', '$interval', function ($sco
             }
             lastUpdate = Date.now();
         });
-    }
+    };
     $scope.refresher = undefined;
     if (typeof $scope.refresher == "undefined") {
         $scope.getStatus();
@@ -243,24 +243,24 @@ squeezefox.controller('PlayerStatusCtrl', ['$scope', '$interval', function ($sco
 
     $scope.transitionToggle = function transitionToggle() {
         $scope.showPlaylist = $scope.showPlaylist ? false : true;
-    }
+    };
     $scope.CSS_transition = function CSS_transition() {
         return $scope.showPlaylist ? "performtransition" : "";
-    }
+    };
 
     // 
     $scope.playItem = function playItem(index) {
         //XXX update playlists and display?
         $scope.queryPlayer(["playlist","index",index,""]);
-    }
+    };
     $scope.prettyDuration = function prettyDuration(total) {
         function pad(d) {
             if (d < 10) { return '0'+d }
             return d
         }
         if (total == 0) { return; }
-            var m = parseInt(total%3600 / 60)
-            var s = Math.floor(total % 60)
+            var m = parseInt(total%3600 / 60);
+            var s = Math.floor(total % 60);
         if (total < 3600) {
             return "("+m+":"+pad(s)+")";
         }
@@ -272,7 +272,7 @@ squeezefox.controller('PlayerStatusCtrl', ['$scope', '$interval', function ($sco
 }]);
 squeezefox.controller('MusicSearchCtrl', ['$scope', function ($scope) {
     $scope.searchterm = "";
-    $scope.searchresults = []
+    $scope.searchresults = [];
     $scope.searchdetails = {};
     $scope.showTrackDialog = false;
     $scope.dialogItem = {};
@@ -283,7 +283,7 @@ squeezefox.controller('MusicSearchCtrl', ['$scope', function ($scope) {
         $scope.searchprogress = { 'track': true };
         $scope.queryServer(["search", "0","20","term:"+term], function(xhr) {
             $scope.searchprogress.track = false;
-            var tracks = []
+            var tracks = [];
             if ('tracks_loop' in xhr.response.result) {
                 $scope.noresults.track = false;
                 tracks = xhr.response.result.tracks_loop; // array with objects that have track_id, track properties
@@ -305,15 +305,15 @@ squeezefox.controller('MusicSearchCtrl', ['$scope', function ($scope) {
                 });
             }
         });
-    }
+    };
     $scope.trackDialog = function trackDialog(item) {
-        $scope.dialogItem = item;
-        $scope.showTrackDialog = true;
-    }
+      $scope.dialogItem = item;
+      $scope.showTrackDialog = true;
+    };
     $scope.addItem = function addItem(item) { // add to queue
         $scope.showTrackDialog=false;
         $scope.queryPlayer(["playlist","addtracks","track.titlesearch="+(item.track ? item.track : item.title)]); // what if 2 tracks same name? add contributor.namesearch= property? API = fail..
-    }
+    };
     $scope.playItem = function playItem(item) { // play now
         $scope.showTrackDialog=false;
         var plen = $scope.$parent.playlist.list.length;
@@ -328,7 +328,7 @@ squeezefox.controller('MusicSearchCtrl', ['$scope', function ($scope) {
 }]);
 
 squeezefox.controller('FavoritesCtrl', ['$scope', function ($scope) {
-    $scope.favorites = []
+    $scope.favorites = [];
     localforage.getItem("favorites", function (cachedFavorites) {
         $scope.favorites = cachedFavorites || [];
     });
@@ -345,7 +345,7 @@ squeezefox.controller('FavoritesCtrl', ['$scope', function ($scope) {
     }
     $scope.playFavorite = function playFavorite(id) {
         $scope.JSONRPC({"id":1,"method":"slim.request","params": [$scope.selectedPlayer.playerid, ["favorites","playlist","play","item_id:"+id]]}); 
-    }
+    };
 
     // show only on my squeezebox, until we have found out how this feature works and if there's API support:
     $scope.freddysbox = false;
