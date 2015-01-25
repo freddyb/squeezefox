@@ -30,7 +30,7 @@
   perspective: 1000px;
 }
 #flip_card {
-  width: 100%;
+  width: 98%;
   height: 100%;
   transform-style: preserve-3d;
   transition: all 1.0s linear;
