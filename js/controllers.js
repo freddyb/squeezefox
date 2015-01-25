@@ -16,7 +16,7 @@ squeezefox.controller('WindowCtrl', ['$scope', function ($scope) {
 
     $scope.current_window = "play";
     // FxOS >2.2 can use volup/voldown hardware buttons:
-    $scope.showVolumeBar = !(/Mobile.*Firefox\/36/).test(navigator.userAgent);
+    $scope.showVolumeBar = true; //XXX bug !(/Mobile.*Firefox\/36/).test(navigator.userAgent);
     $scope.hidden = false;
     $scope.server = { addr: '', port: '', retries: 0 };
     localforage.getItem('server').then(function (cachedServer) {
@@ -392,7 +392,7 @@ angular.element(document).ready(function() {
         angular.element(document.body).scope().hidden = document.hidden;
     }, false);
 
-    document.addEventListener("keydown", function(evt) {
+    window.addEventListener("keydown", function(evt) {
       if (evt.key == 'VolumeDown') {
         angular.element(document.body).scope().volumeDown();
       } else if (evt.key == 'VolumeUp') {
