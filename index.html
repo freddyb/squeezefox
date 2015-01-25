@@ -56,7 +56,7 @@
         <div id="window-play" ng-class="CSS_window('play')"  ng-controller="PlayerStatusCtrl">
           <!-- playing + cover + toolbar -->
           <div id="flip_container">
-            <div id="volbar">
+            <div id="volbar" ng-show="showVolumeBar">
               <a ng-click="volumeUp()"><i class="fa fa-volume-up"></i></a>
               <a ng-click="volumeDown()"><i class="fa fa-volume-down"></i></a><!-- XXX visual feedback when clicking vol buttons?! -->
             </div>
