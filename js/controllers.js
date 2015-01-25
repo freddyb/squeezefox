@@ -226,8 +226,8 @@ squeezefox.controller('PlayerStatusCtrl', ['$scope', '$interval', function ($sco
                 var rm = rs.remoteMeta; //$scope.playlist.list[$scope.playlist.current];
                 $scope.artworkURL = rm.artwork_url;
             }
-            else if (rs.playlist_loop[rs.playlist_cur_index].coverart == "1") {
-                $scope.artworkURL = "http://"+$scope.server.addr+':'+$scope.server.port+"/music/"+rs.playlist_loop[rs.playlist_cur_index].coverid+"/cover_300x300";
+            else if (rs.playlist_loop[0].coverart == "1") {
+                $scope.artworkURL = "http://"+$scope.server.addr+':'+$scope.server.port+"/music/"+rs.playlist_loop[0].coverid+"/cover_300x300";
             }
             else {
                 $scope.artworkURL = "img/cover-missing.png";
