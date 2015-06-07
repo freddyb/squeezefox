@@ -124,9 +124,16 @@ squeezefox.controller('WindowCtrl', ['$scope', function ($scope) {
     };
     $scope.volumeUp = function volup() {
         $scope.queryPlayer(["mixer","volume", "+2.5"]);
+        var dp = new DOMParser(); //XXX show more beautiful volume feedback
+        var doc = dp.parseFromString("<center>Volume++</center>", "text/html");
+        utils.status.show(doc.firstChild)
     };
     $scope.volumeDown = function voldown() {
         $scope.queryPlayer(["mixer","volume", "-2.5"]);
+        var dp = new DOMParser();  //XXX show more beautiful volume feedback
+        var doc = dp.parseFromString("<center>Volume--</center>", "text/html");
+        utils.status.show(doc.firstChild)
+
     };
 
 
