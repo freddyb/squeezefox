@@ -405,8 +405,10 @@ angular.element(document).ready(function() {
     window.addEventListener("keydown", function(evt) {
       if (evt.key == 'VolumeDown') {
         angular.element(document.body).scope().volumeDown();
+        evt.preventDefault();
       } else if (evt.key == 'VolumeUp') {
         angular.element(document.body).scope().volumeUp();
+        evt.preventDefault();
       }
     });
     // fire a first getStatus asap:
