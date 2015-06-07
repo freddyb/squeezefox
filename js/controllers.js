@@ -336,15 +336,25 @@ squeezefox.controller('FavoritesCtrl', ['$scope', function ($scope) {
     if (triedfavorites == false) {
         if ($scope.selectedPlayer.playerid !== "") {
             triedfavorites = true;
-            $scope.freddysbox = ("00:04:20:2b:39:ec" == $scope.$selectedPlayer.playerid);
+            $scope.freddysbox = ("00:04:20:2b:39:ec" == $scope.selectedPlayer.playerid);
             $scope.JSONRPC({"id":1,"method":"slim.request","params": [$scope.selectedPlayer.playerid, ["favorites","items","","9999"]]}, function(xhr) {
                 $scope.favorites = xhr.response.result.loop_loop;
                 localforage.setItem("favorites", xhr.response.result.loop_loop);
             });
         }
     }
+    $scope.loadFavorites = function() {
+      if ($scope.selectedPlayer.playerid !== "") {
+          triedfavorites = true;
+          $scope.freddysbox = ("00:04:20:2b:39:ec" == $scope.selectedPlayer.playerid);
+          $scope.JSONRPC({"id":1,"method":"slim.request","params": [$scope.selectedPlayer.playerid, ["favorites","items","","9999"]]}, function(xhr) {
+              $scope.favorites = xhr.response.result.loop_loop;
+              localforage.setItem("favorites", xhr.response.result.loop_loop);
+          });
+      }
+    };
     $scope.playFavorite = function playFavorite(id) {
-        $scope.JSONRPC({"id":1,"method":"slim.request","params": [$scope.selectedPlayer.playerid, ["favorites","playlist","play","item_id:"+id]]}); 
+        $scope.JSONRPC({"id":1,"method":"slim.request","params": [$scope.selectedPlayer.playerid, ["favorites","playlist","play","item_id:"+id]]});
     };
 
     // show only on my squeezebox, until we have found out how this feature works and if there's API support:
