@@ -9,7 +9,7 @@ var squeezefox = angular.module('Squeezefox', ['ngAnimate'])
 ]);
 
 squeezefox.controller('WindowCtrl', ['$scope', function ($scope) {
-    
+
     $scope.players = [];
     $scope.selectedPlayer = {playerid: "",
                              name: ""};
@@ -41,13 +41,13 @@ squeezefox.controller('WindowCtrl', ['$scope', function ($scope) {
             }
         });
     });
-    
+
     $scope.playlist = {current: 0, list: []};
     $scope.active   = false;
     $scope.power    = 0;
     $scope.playing  = false;
     $scope.shuffle  = 0;
-    
+
     $scope.JSONRPC = function JSONRPC(payload, callback) {
         var xhr = new XMLHttpRequest({mozSystem: true});
         xhr.open("POST", "http://"+$scope.server.addr+':'+$scope.server.port+"/jsonrpc.js");
@@ -69,7 +69,7 @@ squeezefox.controller('WindowCtrl', ['$scope', function ($scope) {
             utils.status.show('Connection problems');
         };
     };
-    
+
     /*
     * wrapper to JSONRPC. do a slim request on the current set playerid
     * params is a list, eg: ["play", ""]
@@ -84,7 +84,7 @@ squeezefox.controller('WindowCtrl', ['$scope', function ($scope) {
     $scope.queryServer = function (params, callback) {
         $scope.JSONRPC({"id":1,"method":"slim.request","params":["", params]}, callback);
     };
-    
+
     $scope.play = function play() { // toggle
         $scope.queryPlayer(["play", ""]);
         //$scope.getStatus();
@@ -129,7 +129,7 @@ squeezefox.controller('WindowCtrl', ['$scope', function ($scope) {
         $scope.queryPlayer(["mixer","volume", "-2.5"]);
     };
 
-    
+
     $scope.changeWindow = function changeWindow(name) {
         if (['play', 'music', 'favorites', 'settings'].indexOf(name) !== -1) {
             $scope.current_window = name;
@@ -157,7 +157,7 @@ squeezefox.controller('WindowCtrl', ['$scope', function ($scope) {
     };
     $scope.CSS_Shuffle = function() {
         return $scope.shuffle ? 'media-shuffleon' : 'media-shuffleoff';
-    };    
+    };
 
     $scope.CSS_Power = function() {
         return $scope.power ? "brightness" : "lower-brightness";
@@ -174,7 +174,7 @@ squeezefox.controller('WindowCtrl', ['$scope', function ($scope) {
 /*<div id="window-music"></div>
     <div id="window-favorites"></div>
     <div id="window-settings"></div>*/
-    
+
 }]);
 
 squeezefox.controller('PlayerStatusCtrl', ['$scope', '$interval', function ($scope, $interval) {
@@ -189,10 +189,10 @@ squeezefox.controller('PlayerStatusCtrl', ['$scope', '$interval', function ($sco
     // Update Status
     $scope.getStatus = function getStatus() {
         //XXX replace 50 with max(50,playlistsize)
-        if ($scope.$parent.hidden || 
-            typeof $scope.server == 'undefined' || 
-            $scope.server == null || 
-            typeof $scope.server.addr == 'undefined' || 
+        if ($scope.$parent.hidden ||
+            typeof $scope.server == 'undefined' ||
+            $scope.server == null ||
+            typeof $scope.server.addr == 'undefined' ||
             typeof $scope.server.port == 'undefined' ||
             $scope.server.addr == '' ||
             $scope.server.port == ''
@@ -248,7 +248,7 @@ squeezefox.controller('PlayerStatusCtrl', ['$scope', '$interval', function ($sco
         return $scope.showPlaylist ? "performtransition" : "";
     };
 
-    // 
+    //
     $scope.playItem = function playItem(index) {
         //XXX update playlists and display?
         $scope.queryPlayer(["playlist","index",index,""]);
@@ -278,7 +278,7 @@ squeezefox.controller('MusicSearchCtrl', ['$scope', function ($scope) {
     $scope.dialogItem = {};
     $scope.noresults = { 'track': false };
     $scope.searchprogress = { 'track': false };
-    
+
     $scope.search = function search(term) {
         $scope.searchprogress = { 'track': true };
         $scope.queryServer(["search", "0","20","term:"+term], function(xhr) {
@@ -317,7 +317,7 @@ squeezefox.controller('MusicSearchCtrl', ['$scope', function ($scope) {
     $scope.playItem = function playItem(item) { // play now
         $scope.showTrackDialog=false;
         var plen = $scope.$parent.playlist.list.length;
-        /* strange there is no easier api call for this. (or is there?) 
+        /* strange there is no easier api call for this. (or is there?)
          * also this is not 100% safe, eg when a track ends before moving is done?
          * XXX should play now mean: put it at pos 0 or pos 1? please test this
          */
@@ -389,7 +389,7 @@ squeezefox.controller('SettingsCtrl', ['$scope', function ($scope) {
 
     $scope.tryServer = function tryServer() {
         $scope.queryServer(["serverstatus",0,999], function(xhr) {
-            $scope.$parent.active = true; // errback and feedback.            
+            $scope.$parent.active = true; // errback and feedback.
             $scope.players = xhr.response.result.players_loop;
             localforage.setItem("players", xhr.response.result.players_loop);
         });
