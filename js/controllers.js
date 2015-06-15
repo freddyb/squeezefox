@@ -227,6 +227,7 @@ squeezefox.controller('PlayerStatusCtrl', ['$scope', '$interval', function ($sco
                     currentlyPlaying = entry;
                     $scope.currentArtist = currentlyPlaying.artist;
                     $scope.currentTitle = currentlyPlaying.title;
+                    $scope.currentAlbum = currentlyPlaying.album;
                 }
             }
             if ('remoteMeta' in rs) {
@@ -279,40 +280,105 @@ squeezefox.controller('PlayerStatusCtrl', ['$scope', '$interval', function ($sco
 }]);
 squeezefox.controller('MusicSearchCtrl', ['$scope', function ($scope) {
     $scope.searchterm = "";
-    $scope.searchresults = [];
-    $scope.searchdetails = {};
+    $scope.searchresults = {};
+    $scope.searchdetails = { 'tracks': {},
+                             'albums': {},
+                             'contributors': {}
+    };
     $scope.showTrackDialog = false;
     $scope.dialogItem = {};
-    $scope.noresults = { 'track': false };
+    $scope.noresults = { 'tracks': true, 'albums': true, 'contributors': true };
     $scope.searchprogress = { 'track': false };
 
     $scope.search = function search(term) {
+      console.log("searching for", term);
         $scope.searchprogress = { 'track': true };
-        $scope.queryServer(["search", "0","20","term:"+term], function(xhr) {
+        $scope.queryServer(["search", "0","20","term:"+term,"extended:1"], function(xhr) {
             $scope.searchprogress.track = false;
-            var tracks = [];
-            if ('tracks_loop' in xhr.response.result) {
-                $scope.noresults.track = false;
-                tracks = xhr.response.result.tracks_loop; // array with objects that have track_id, track properties
-            }
-            else {
-                $scope.noresults.track = true;
-            }
-            $scope.searchresults = tracks;
-            // fill in details for list (e.g. artist)
-            for (var item of tracks) {
-                $scope.queryServer(["songinfo", "0","11","track_id:"+item.track_id], function(xhr) {
-                    var songinfo = xhr.response.result.songinfo_loop;
-                    $scope.searchdetails[parseInt(songinfo[0].id)] = {
-                        title: songinfo[1].title, artist: songinfo[2].artist,
-                        coverid: songinfo[3].coverid, duration: songinfo[4].duration,
-                        album_id: songinfo[5].album_id,
-                        album: songinfo[5].album,
-                        coverurl: "http://"+$scope.server.addr+':'+$scope.server.port+"/music/"+songinfo[3].coverid+"/cover_150x150_o" };
-                });
-            }
+            /*  Object {
+                  albums_count: 112,
+                  contributors_count: 85,
+                  count: 697,
+                  albums_loop: Array[20],
+                  tracks_loop: Array[20],
+                  contributors_loop: Array[20],
+                  tracks_count: 500 }
+            */
+            for (var resultType of ['contributors', 'albums', 'tracks']) {
+              var resultList = [];
+              if (resultType+'_loop' in xhr.response.result) {
+                  $scope.noresults[resultType] = false;
+                  // array with objects that have track_id, track properties
+                  resultList = xhr.response.result[resultType+'_loop'];
+              }
+              else {
+                  $scope.noresults[resultType] = true;
+              }
+              $scope.searchresults[resultType] = resultList;
+              console.log("found ", resultList.length, resultType, resultList);
+              // fill in details for list (e.g. artist)
+              for (var item of resultList) {
+                $scope.searchDetails(resultType, item);
+              }
+          }
         });
     };
+    $scope.searchDetails = function(type, item) {
+      var stype = type.slice(0,-1); // singular for API usage
+      console.log('getting details for', type, item);
+      var searchCmd = {'tracks': 'songinfo',
+                       'albums': 'artists',
+                       'contributors': 'albums'}[type];
+      switch(type) {
+        case 'albums':
+        // artist ??
+        // cover url??
+        // id for reference == parseInt(item[stype+'_id'])
+        // finding artist:
+        $scope.searchdetails[type][parseInt(item[stype+'_id'])] = {
+          coverurl: "http://"+$scope.server.addr+':'+$scope.server.port+"/music/"+item.artwork+"/cover_150x150_o"
+        };
+        var searchTerm = stype+"_id:"+item[stype+'_id'];
+        var searchQuery = [searchCmd, "0","8", searchTerm];
+        $scope.queryServer(searchQuery, function(xhr) {
+          console.log("xhr-details for ", searchQuery, xhr.response);
+          var songinfo = xhr.response.result.artists_loop;
+          $scope.searchdetails[type][parseInt(item[stype+'_id'])].artist = songinfo[0].artist;
+        });
+
+        break;
+        case 'contributors':
+        /*var searchTerm = stype+"_id:"+item[stype+'_id'] // e.g., album_id:item.album_id
+        var searchQuery = ["artists", "0","8", searchTerm]
+        $scope.queryServer(searchQuery, function(xhr) {
+          console.log("xhr-details for ", searchQuery, xhr.response);
+          var songinfo = xhr.response.result.artists_loop;
+          $scope.searchdetails[type][parseInt(item[stype+'_id'])] = {
+              artist: songinfo[0].artist,
+              id: songinfo[0].artist
+          };
+        });*/
+        break;
+        case 'tracks':
+          var searchTerm = stype+"_id:"+item[stype+'_id'] // e.g., album_id:item.album_id
+          var searchQuery = [searchCmd, "0","8", searchTerm]
+          $scope.queryServer(searchQuery, function(xhr) {
+            console.log("xhr-details for ", searchQuery, xhr.response);
+            var songinfo = xhr.response.result.songinfo_loop;
+            $scope.searchdetails[type][parseInt(songinfo[0].id)] = {
+              title: songinfo[1].title, artist: songinfo[2].artist,
+              coverid: songinfo[3].coverid, duration: songinfo[4].duration,
+              album_id: songinfo[5].album_id,
+              album: songinfo[5].album,
+              coverurl: "http://"+$scope.server.addr+':'+$scope.server.port+"/music/"+songinfo[3].coverid+"/cover_150x150_o" };
+            });
+          break;
+          default:
+          console.error("Can not search details for type", type);
+          break;
+        }
+
+    }
     $scope.trackDialog = function trackDialog(item) {
       $scope.dialogItem = item;
       $scope.showTrackDialog = true;
@@ -341,6 +407,8 @@ squeezefox.controller('FavoritesCtrl', ['$scope', function ($scope) {
     });
     var triedfavorites = false;
     if (triedfavorites == false) {
+        // show only on my squeezebox, until we have found out how this feature works and if there's API support:
+        $scope.freddysbox = false;
         if ($scope.selectedPlayer.playerid !== "") {
             triedfavorites = true;
             $scope.freddysbox = ("00:04:20:2b:39:ec" == $scope.selectedPlayer.playerid);
@@ -353,7 +421,6 @@ squeezefox.controller('FavoritesCtrl', ['$scope', function ($scope) {
     $scope.loadFavorites = function() {
       if ($scope.selectedPlayer.playerid !== "") {
           triedfavorites = true;
-          $scope.freddysbox = ("00:04:20:2b:39:ec" == $scope.selectedPlayer.playerid);
           $scope.JSONRPC({"id":1,"method":"slim.request","params": [$scope.selectedPlayer.playerid, ["favorites","items","","9999"]]}, function(xhr) {
               $scope.favorites = xhr.response.result.loop_loop;
               localforage.setItem("favorites", xhr.response.result.loop_loop);
@@ -363,9 +430,6 @@ squeezefox.controller('FavoritesCtrl', ['$scope', function ($scope) {
     $scope.playFavorite = function playFavorite(id) {
         $scope.JSONRPC({"id":1,"method":"slim.request","params": [$scope.selectedPlayer.playerid, ["favorites","playlist","play","item_id:"+id]]});
     };
-
-    // show only on my squeezebox, until we have found out how this feature works and if there's API support:
-    $scope.freddysbox = false;
 
     $scope.playDeezer = function() {
         var x = new XMLHttpRequest();

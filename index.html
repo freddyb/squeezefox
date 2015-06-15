@@ -64,7 +64,10 @@
               <div id="playerStatus" class="front face">
                 <div id="playingInfo">
                   <div id="playingArtist">{{ currentArtist }}</div>
-                  <div id="playingTitle">{{ currentTitle }} <em ng-hide="playing">(Paused)</em></div>
+                  <div id="playingTitle">{{ currentTitle }}
+                      <em ng-hide="playing">(Paused)</em>
+                      <span id="playingAlbum">{{ currentAlbum }}</span>
+                  </div>
                 </div>
                 <div id="coverimage">
                   <img ng-model="artworkURL" ng-src="{{ artworkURL }}">
@@ -123,14 +126,39 @@
           <section data-type="list" ng-show="searchresults">
             <nav data-type="scrollbar"></nav>
             <header>Search Results</header>
-            <ul>
-              <li ng-repeat="item in searchresults">
-                <aside ng-show="searchdetails[item.track_id]" class="pack-end">
-                  <img alt="placeholder" ng-src="{{ searchdetails[item.track_id].coverurl }}">
+            <header  ng-hide="noresults.contributors">Artists</header>
+            <ul ng-hide="noresults.contributors">
+              <li ng-repeat="item in searchresults.contributors">
+                <!--<aside ng-show="searchdetails.contributors[item.track_id]" class="pack-end">
+                  <img alt="placeholder" ng-src="{{ searchdetails.contributors[item.track_id].coverurl }}">
+                </aside>-->
+                <a href="#" ng-click="artistDialog(item)">
+                  <p>{{ item.contributor }}</p>
+                  <p ng-show="searchdetails.contributors[item.track_id]">by {{ searchdetails.contributors[item.track_id].artist }}</p>
+                </a>
+              </li>
+            </ul>
+            <header ng-hide="noresults.albums">Albums</header>
+            <ul ng-hide="noresults.albums">
+              <li ng-repeat="item in searchresults.albums">
+                <aside ng-show="searchdetails.albums[item.album_id]" class="pack-end">
+                  <img alt="placeholder" ng-src="{{ searchdetails.albums[item.album_id].coverurl }}">
+                </aside>
+                <a href="#" ng-click="albumDialog(item)">
+                  <p>{{ item.album }}</p>
+                  <p ng-show="searchdetails.albums[item.album_id]">by {{ searchdetails.albums[item.album_id].artist }}</p>
+                </a>
+              </li>
+            </ul>
+            <header ng-hide="noresults.tracks">Tracks</header>
+            <ul ng-hide="noresults.tracks">
+              <li ng-repeat="item in searchresults.tracks">
+                <aside ng-show="searchdetails.tracks[item.track_id]" class="pack-end">
+                  <img alt="placeholder" ng-src="{{ searchdetails.tracks[item.track_id].coverurl }}">
                 </aside>
                 <a href="#" ng-click="trackDialog(item)">
                   <p>{{ item.track }}</p>
-                  <p ng-show="searchdetails[item.track_id]">by {{ searchdetails[item.track_id].artist }}</p>
+                  <p ng-show="searchdetails.tracks[item.track_id]">by {{ searchdetails.tracks[item.track_id].artist }}</p>
                 </a>
               </li>
             </ul>

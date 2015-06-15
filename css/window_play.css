@@ -11,7 +11,7 @@
   font-size: 12pt;
   color:white;
   background-color:black;
-  margin: 5px; 
+  margin: 5px;
 }
 #playingTitle {
   font-weight: bold;
@@ -21,7 +21,11 @@
 #playingArtist,#playingTitle {
   width: 25rem;
 }
-
+#playingAlbum {
+  color: lightgrey;
+  font-weight: normal;
+  font-style: italic;
+}
 #flip_container {
   position: relative;
   width: 100%;
