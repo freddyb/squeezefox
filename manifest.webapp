@@ -1,5 +1,5 @@
 {
-  "version": "0.9.0",
+  "version": "1.0.0",
   "name": "Squeezefox",
   "description": "A remote control for logitech squeezebox servers and players",
   "launch_path": "/index.html",
@@ -11,7 +11,7 @@
   },
   "developer": {
     "name": "Frederik Braun",
-    "url": "http://frederik-braun.com"
+    "url": "https://frederik-braun.com"
   },
   "type": "privileged",
   "permissions": {
