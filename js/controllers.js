@@ -262,7 +262,7 @@ squeezefox.controller('PlayerStatusCtrl', ['$scope', '$interval', function ($sco
   //
   $scope.playItem = function playItem(index) {
     //XXX update playlists and display?
-    $scope.queryPlayer(["playlist","index",index,""]);
+    $scope.queryPlayer(["playlist","index",index]);
   };
   $scope.prettyDuration = function prettyDuration(total) {
     function pad(d) {
