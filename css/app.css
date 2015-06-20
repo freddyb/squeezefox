@@ -5,6 +5,10 @@ html, body {
   margin: 0;
   color: white;
 }
+a.textlink {
+  color: #00B1FF;
+  font-weight: bold;
+}
 body {
   font-size: 1rem;
 }

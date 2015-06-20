@@ -52,7 +52,7 @@
         </menu>
         <h1>{{ windowTitle(current_window) }}</h1>
       </header>
-      <div role="main" id="main" ng-class="{{ CSS_Enabled }} ">
+      <div role="main" id="main">
         <div id="window-play" ng-class="CSS_window('play')"  ng-controller="PlayerStatusCtrl">
           <!-- playing + cover + toolbar -->
           <div id="flip_container">
@@ -70,7 +70,13 @@
                   </div>
                 </div>
                 <div id="coverimage">
-                  <img ng-model="artworkURL" ng-src="{{ artworkURL }}">
+                  <div ng-hide="active">
+                      <p ng-hide="players">Please wait</p>
+                      <progress></progress>
+                      <p ng-hide="players">Have you already picked your<br>
+                      server in the Settings?</p>
+                  </div>
+                  <img ng-show="active" ng-model="artworkURL" ng-src="{{ artworkURL }}">
                   <!--
                     maybe use this for placeholder image is given is broken
                     http://hueypetersen.com/posts/2012/07/24/creating-a-fallback-image-directive-with-angularjs/
@@ -117,22 +123,19 @@
               <button type="reset">Clear</button>
             </p>
           </form>
-          <section data-type="list" ng-show="noresults.track">
-              <header>No Results</header>
-          </section>
-          <div ng-show="searchprogress.track" class="content center">
-              <progress></progress>
-          </div>
           <section data-type="list" ng-show="searchresults">
             <nav data-type="scrollbar"></nav>
             <header>Search Results</header>
-            <header  ng-hide="noresults.contributors">Artists</header>
+            <div ng-show="searchprogress.track" class="content center">
+                <progress></progress>
+            </div>
+            <header ng-hide="noresults.contributors">Artists</header>
             <ul ng-hide="noresults.contributors">
               <li ng-repeat="item in searchresults.contributors">
                 <!--<aside ng-show="searchdetails.contributors[item.track_id]" class="pack-end">
                   <img alt="placeholder" ng-src="{{ searchdetails.contributors[item.track_id].coverurl }}">
                 </aside>-->
-                <a href="#" ng-click="artistDialog(item)">
+                <a href="#" ng-click="actionDialog(item)">
                   <p>{{ item.contributor }}</p>
                   <p ng-show="searchdetails.contributors[item.track_id]">by {{ searchdetails.contributors[item.track_id].artist }}</p>
                 </a>
@@ -141,10 +144,10 @@
             <header ng-hide="noresults.albums">Albums</header>
             <ul ng-hide="noresults.albums">
               <li ng-repeat="item in searchresults.albums">
-                <aside ng-show="searchdetails.albums[item.album_id]" class="pack-end">
+                <aside ng-show="searchdetails.albums[item.album_id].coverurl" class="pack-end">
                   <img alt="placeholder" ng-src="{{ searchdetails.albums[item.album_id].coverurl }}">
                 </aside>
-                <a href="#" ng-click="albumDialog(item)">
+                <a href="#" ng-click="actionDialog(item)">
                   <p>{{ item.album }}</p>
                   <p ng-show="searchdetails.albums[item.album_id]">by {{ searchdetails.albums[item.album_id].artist }}</p>
                 </a>
@@ -153,22 +156,20 @@
             <header ng-hide="noresults.tracks">Tracks</header>
             <ul ng-hide="noresults.tracks">
               <li ng-repeat="item in searchresults.tracks">
-                <aside ng-show="searchdetails.tracks[item.track_id]" class="pack-end">
+                <aside ng-show="searchdetails.tracks[item.track_id].coverurl" class="pack-end">
                   <img alt="placeholder" ng-src="{{ searchdetails.tracks[item.track_id].coverurl }}">
                 </aside>
-                <a href="#" ng-click="trackDialog(item)">
+                <a href="#" ng-click="actionDialog(item)">
                   <p>{{ item.track }}</p>
                   <p ng-show="searchdetails.tracks[item.track_id]">by {{ searchdetails.tracks[item.track_id].artist }}</p>
                 </a>
               </li>
             </ul>
           </section>
-          <form role="dialog" data-type="action" ng-show="showTrackDialog">
-            <header>{{ dialogItem.track }}</header>
+          <form role="dialog" data-type="action" ng-show="searchDialog.visible">
+            <header>{{ searchDialog.title }}</header>
             <menu>
-              <button ng-click="playItem(dialogItem)">Play now</button>
-              <button ng-click="addItem(dialogItem)">Add to playlist</button>
-              <button ng-click="showTrackDialog=false">Cancel</button>
+              <button ng-repeat="action in searchDialog.actions" ng-click="action.func.apply(null, action.params)">{{ action.title }}</button>
             </menu>
           </form>
         </div>
@@ -216,12 +217,17 @@
             </fieldset>
             <fieldset>
               <legend class="action">Player</legend>
-              <p ng-hide="players">You must select a server before you can pick a player.</p>
-              <p ng-hide="$parent.selectedPlayer.name && players">Now please select a player:</p>
+              <p>Please select a player:</p>
               <section ng-show="players">
                 <select ng-model="$parent.selectedPlayer" ng-options="player.name for player in players">
                 </select>
+              <p ng-hide="players.length">You must select a server before you can select a player.</p>
               </section>
+            </fieldset>
+            <fieldset>
+              <legend>Help &amp; Support</legend>
+              <p>Squeezefox is just a remote control for your existing music hardware.
+              <a class="textlink" href="https://github.com/freddyb/squeezefox">See here for more</a></p>
             </fieldset>
           </form>
         </div>
