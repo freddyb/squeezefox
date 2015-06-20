@@ -151,6 +151,9 @@ squeezefox.controller('WindowCtrl', ['$scope', function ($scope) {
       case "play":
       return "Now playing";
       break;
+      case "music":
+      return "Search";
+      break;
       default:
       return capitalize(t);
     }
