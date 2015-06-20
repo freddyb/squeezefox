@@ -295,7 +295,7 @@ $scope.searchprogress = { 'track': false };
 
 $scope.search = function search(term) {
   $scope.searchprogress = { 'track': true };
-  $scope.queryServer(["search", "0","20","term:"+term,"extended:1"], function(xhr) {
+  $scope.queryServer(["search", "0","90","term:"+term,"extended:1"], function(xhr) {
     $scope.searchprogress.track = false;
     /*  Object {
     albums_count: 112,
