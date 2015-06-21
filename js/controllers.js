@@ -124,18 +124,29 @@ squeezefox.controller('WindowCtrl', ['$scope', function ($scope) {
   };
   $scope.volumeUp = function volup() {
     $scope.queryPlayer(["mixer","volume", "+2.5"]);
-    var dp = new DOMParser(); //XXX show more beautiful volume feedback
-    var doc = dp.parseFromString("<center>Volume++</center>", "text/html");
-    utils.status.show(doc.firstChild)
+    $scope.showVolumeBar();
   };
   $scope.volumeDown = function voldown() {
     $scope.queryPlayer(["mixer","volume", "-2.5"]);
-    var dp = new DOMParser();  //XXX show more beautiful volume feedback
-    var doc = dp.parseFromString("<center>Volume--</center>", "text/html");
-    utils.status.show(doc.firstChild)
-
+    $scope.showVolumeBar();
   };
-
+  $scope.showVolumeBar = function showvolbar() {
+    $scope.queryPlayer(["mixer","volume", "?"], function(xhr) {
+      // TODO: store vol globally in playerCtrl.volume (other scope!)?!
+      var vol = xhr.response.result._volume;
+      // play has a 0 - 100 scale
+      // volume button (squeezefox as well as real remote) is 40 steps of 2.5
+      // i.e., 100/40 = 2.5
+      // BUT we will half it, because it looks better :-)
+      $scope.steps = (vol)/5; // i.e., 23 of 40.
+      $scope.volarray = Array(20);
+      $scope.showVolume = true;
+      setTimeout(function() {
+        $scope.showVolume = false;
+        $scope.$apply();
+      }, 5000)
+    });
+  }
 
   $scope.changeWindow = function changeWindow(name) {
     if (['play', 'music', 'favorites', 'settings'].indexOf(name) !== -1) {

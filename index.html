@@ -30,6 +30,14 @@
     <link rel="stylesheet" href="css/app.css">
   </head>
   <body ng-controller="WindowCtrl">
+    <div id="volume" ng-show="showVolume">
+      <section>
+          <i class="fa fa-volume-down"></i>
+          <div ng-repeat="_ in volarray track by $index" ng-class="{active: $index <= steps }">
+          </div>
+          <i class="fa fa-volume-up"></i>
+      </section>
+    </div>
     <section id="sidebar" data-type="sidebar">
       <header>
         <h1>Squeezefox</h1>
