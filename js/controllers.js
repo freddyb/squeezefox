@@ -200,7 +200,7 @@ squeezefox.controller('PlayerStatusCtrl', ['$scope', '$interval', function ($sco
   var lastUpdate       = 0;
   $scope.playerTitle   = "";
   $scope.currentArtist = "";
-  $scope.currentTitle  = "Disconnected.";
+  $scope.currentTitle  = "";
   $scope.artworkURL    = "img/cover-missing.png";
   $scope.showPlaylist  = false;
   $scope.playing       = true;
