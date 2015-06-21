@@ -66,7 +66,6 @@ squeezefox.controller('WindowCtrl', ['$scope', function ($scope) {
     xhr.onerror = function (e) {
       // XXX general error handling? provide another callback?
       $scope.server.retries++;
-      debugger;
       utils.status.show('Connection problems');
     };
   };
