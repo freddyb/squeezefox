@@ -96,6 +96,10 @@
 }
 
 /* white power button */
-#drawer > header > menu button {
+#drawer > header > menu button.brightness > i {
   color: #fff;
+}
+
+#drawer > header > menu button.lower-brightness > i {
+  color: darkgrey;
 }
