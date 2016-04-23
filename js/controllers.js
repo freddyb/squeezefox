@@ -18,7 +18,7 @@ squeezefox.controller('WindowCtrl', ['$scope', function ($scope) {
   // FxOS >2.2 can use volup/voldown hardware buttons:
   $scope.showVolumeBar = true; //XXX bug !(/Mobile.*Firefox\/36/).test(navigator.userAgent);
   $scope.hidden = false;
-  $scope.server = { addr: '', port: '', retries: 0 };
+  $scope.server = { addr: location.hostname, port: location.port, retries: 0 };
   localforage.getItem('server').then(function (cachedServer) {
     if (typeof cachedServer != 'undefined' && cachedServer != null) {
       $scope.server = cachedServer;
@@ -49,7 +49,7 @@ squeezefox.controller('WindowCtrl', ['$scope', function ($scope) {
   $scope.shuffle  = 0;
 
   $scope.JSONRPC = function JSONRPC(payload, callback) {
-    var xhr = new XMLHttpRequest({mozSystem: true});
+    var xhr = new XMLHttpRequest();
     xhr.open("POST", "http://"+$scope.server.addr+':'+$scope.server.port+"/jsonrpc.js");
     xhr.responseType = "json";
     xhr.send(JSON.stringify(payload));
@@ -489,16 +489,13 @@ squeezefox.controller('SettingsCtrl', ['$scope', function ($scope) {
   "canpoweroff" : 1,
   "playerid" : "00:04:20:2b:39:ec"
 }, */
-
-
-
-$scope.tryServer = function tryServer() {
-  $scope.queryServer(["serverstatus",0,999], function(xhr) {
-    $scope.$parent.active = true; // errback and feedback.
-    $scope.players = xhr.response.result.players_loop;
-    localforage.setItem("players", xhr.response.result.players_loop);
-  });
-}
+  $scope.tryServer = function tryServer() {
+    $scope.queryServer(["serverstatus",0,999], function(xhr) {
+      $scope.$parent.active = true; // errback and feedback.
+      $scope.players = xhr.response.result.players_loop;
+      localforage.setItem("players", xhr.response.result.players_loop);
+    });
+  }
 }]);
 
 angular.element(document).ready(function() {

@@ -14,10 +14,5 @@
     "url": "https://frederik-braun.com"
   },
   "type": "privileged",
-  "permissions": {
-    "systemXHR": {
-      "description": "This is required to perform cross-origin requests towards your squeezebox server (the IP must first be set by the user in the settings window)"
-    }
-  },
   "orientation": "portrait"
 }

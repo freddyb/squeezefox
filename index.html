@@ -213,13 +213,9 @@
               <legend class="action">Server Address</legend>
               <p ng-hide="$parent.server.addr">First enter server IP or hostname and the port.</p>
               <section>
-                <p>
-                  <input type="text" placeholder="192.168.1.1" required="" ng-model="server.addr">
-                  <button type="reset">Clear</button>
+                <p ng-model="server.addr">
                 </p>
-                <p>
-                  <input type="text" placeholder="9000" value="9000" required="" ng-model="server.port">
-                  <button type="reset">Clear</button>
+                <p ng-model="server.port">
                 </p>
                 <a class="recommend" role="button" href="#" ng-click="tryServer()">Find Players</a>
               </section>
