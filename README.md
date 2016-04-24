@@ -1,3 +1,6 @@
+## Note
+Work on this app has stopped. See https://github.com/freddyb/squeezefox/issues/40 for more.
+
 # Squeezefox
 Squeezefox is a remote control for logitech squeezebox based devices. It allows you to see what's currently playing and comes with the usual play/pause/next/back buttons. You can also look at the current playlist and search for single tracks to either play them directly or add them to the play queue. Squeezefox also supports inspecting and playing your Favorites.
 
